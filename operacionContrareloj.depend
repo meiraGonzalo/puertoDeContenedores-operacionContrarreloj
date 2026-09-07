@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1788815568 source:c:\users\gonmd\onedrive\desktop\tp ayed\puertodecontenedores-operacioncontrarreloj\operacioncontrareloj\funciones.c
+
+1743445502 source:c:\users\gonmd\onedrive\desktop\tp ayed\puertodecontenedores-operacioncontrarreloj\operacioncontrareloj\main.c
+	<stdio.h>
+	<stdlib.h>
+
