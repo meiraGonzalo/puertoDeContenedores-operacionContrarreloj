@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "nodo.h"
+#include "../nodo/nodo.h"
 typedef tNodo* tLista;
 
 void CrearLista(tLista *pLista);
@@ -19,7 +19,7 @@ int InsPrinLista(tLista *pLista, void *info, size_t taminfo);
 int OutPrinLista(tLista *pLista, void *info, size_t taminfo);
 int InsUltLista(tLista *pLista, void *info, size_t taminfo);
 int OutUltLista(tLista *pLista, void *info, size_t taminfo);
-int IntPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos);
+int InsPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos);
 int OutPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos);
 void RecorrerLista(tLista *pLista, void accion(void*, void*), void *param);
 void ReduceLista(tLista *pLista, void reduce(void*, void*, void*), void *resu, void *param);

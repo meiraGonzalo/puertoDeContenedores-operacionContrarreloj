@@ -48,7 +48,7 @@ int OutUltLista(tLista *pLista, void *info, size_t taminfo){
     return EXITO;
 
 }
-int IntPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos){
+int InsPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos){
     while(*pLista && pos){
         pLista=&(*pLista)->sig;
         pos--;

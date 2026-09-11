@@ -1,9 +1,9 @@
 #ifndef FUNCIONES_H_INCLUDED
 #define FUNCIONES_H_INCLUDED
 
-#include "pila_dinamica.h"
-#include "cola_dinamica.h"
-#include "lista_dinamica.h"
+#include "bibliotecas/tdaPilaDinamica/pila_dinamica.h"
+#include "bibliotecas/tdaColaDinamica/cola_dinamica.h"
+#include "bibliotecas/tdaListaDinamica/lista_dinamica.h"
 #include <time.h>
 
 #define MAX_COUNT 150
@@ -12,6 +12,24 @@
 #define EXITO 1
 #define POS_INVALIDA -1
 #define FIN_LLEGADA 5 //tiempo antes de que termine la jornada en el que no pueden llegar mas buques
+#define COLA_VACIA 0
+
+typedef struct{
+    char cod[10];
+    int tiempo;
+    tCola contenedores;
+}tBuque;
+
+typedef struct{
+    char codcamion[10];
+    char codcont[10];
+}tCamion;
+
+typedef struct{
+    int nro;
+    tBuque asignado;
+    int estado; //1 libre, 0 ocupado
+}tMuelle;
 
 typedef struct{
     int duracion_jornada;//duracion de la jornada completa en minutos
@@ -23,11 +41,11 @@ typedef struct{
     int max_cont_buque;
     int tiempo_descarga;//minutos consumidos para descargar un contenedor y almacenarlo en una zona
     int tiempo_reubi; //minutos consumidos para trasladar un contenedor desde el tope de una zona al tope de otra
-    int tiempo_carga; // minutos consumidos para retirar un contenedor del tope de una zona y cargarlo en el camión que corresponda.
+    int tiempo_carga; // minutos consumidos para retirar un contenedor del tope de una zona y cargarlo en el camiï¿½n que corresponda.
 }tConfig;
 
 int CargarConfiguracion(char *nomarch, tConfig *conf);
 int GenerarRandom(int liminf, int limsup);
-int GenerarSimulacion(char *sim, tConfig *conf);
+int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones);
 
 #endif // FUNCIONES_H_INCLUDED

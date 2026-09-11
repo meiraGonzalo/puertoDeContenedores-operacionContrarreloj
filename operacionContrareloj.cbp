@@ -31,13 +31,26 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="cola_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="cola_dinamica.h" />
 		<Unit filename="funciones.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="funciones.h" />
+		<Unit filename="lista_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="lista_dinamica.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="nodo.h" />
+		<Unit filename="pila_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="pila_dinamica.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

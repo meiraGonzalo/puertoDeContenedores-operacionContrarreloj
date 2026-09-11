@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "nodo.h"
+#include "../nodo/nodo.h"
 
 typedef tNodo* tPila;
 

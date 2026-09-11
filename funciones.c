@@ -72,15 +72,17 @@ int CargarConfiguracion(char *nomarch, tConfig *conf){
     return EXITO;
 }
 
-int GenerarSimulacion(char *sim, tConfig *conf){
+int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
+    tBuque buque;
+    tCamion camion;
     char codcont[30];
-    int i,j,total_contenedores=0,cant_buques, cant_camiones,cant_contenedores, posrandom;
+    int i,j,total_contenedores=0,cant_buques, cant_camiones,cant_contenedores, posrandom,tiempo=0;
     tLista lista;
-    CrearLista(&lista);
     FILE *fpuerto=fopen(sim, "wt");
     if(!fpuerto){
         return ERROR_ARCHIVO;
     }
+    CrearLista(&lista);
     fprintf(fpuerto,"JORNADA: %d\n", conf->duracion_jornada);
     fprintf(fpuerto,"MUELLES: %d\n", conf->cantidad_muelles);
     fprintf(fpuerto,"ZONAS: %d\n",conf->cant_zonas);
@@ -89,29 +91,41 @@ int GenerarSimulacion(char *sim, tConfig *conf){
     cant_buques=GenerarRandom(1, conf->max_buques);
     i=0;
     while(i<cant_buques){
-        fprintf(fpuerto,"B00%d;T=%d;C=",i+1,GenerarRandom(0,conf->duracion_jornada -FIN_LLEGADA));
+        if(i!=0) //el primero de los buques siempre llegara en t=0
+            tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA); //asi se mantiene el orden de llegada en el archivo
+        fprintf(fpuerto,"B00%d;T=%d;C=",i+1,tiempo);
         cant_contenedores=GenerarRandom(1,conf->max_cont_buque);
         j=0;
+        sprintf(buque.cod, "B00%d",i+1);
+        buque.tiempo=tiempo;
+        CreateQueue(&buque.contenedores);
         while(j<cant_contenedores){
             fprintf(fpuerto,"C%d0%d",i+1,j+1);
             if(j<cant_contenedores-1)
                 fprintf(fpuerto,",");
             sprintf(codcont,"C%d0%d", i+1,j+1);
+            EnQueue(&buque.contenedores, codcont, strlen(codcont)+1);
             InsPrinLista(&lista,codcont, strlen(codcont)+1);
             total_contenedores++;
             j++;
         }
+        EnQueue(buques, &buque, sizeof(tBuque));
         fprintf(fpuerto, "\n");
         i++;
     }
     fprintf(fpuerto,"\n[CAMIONES]\n");
     i=0;
+    tiempo=0;
     cant_camiones=GenerarRandom(1, conf->max_camiones);
     cant_camiones=(cant_camiones>total_contenedores)?total_contenedores:cant_camiones;
     while(i<cant_camiones){
         posrandom=GenerarRandom(0, total_contenedores-1);
+        tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA);
         OutPosLista(&lista, codcont, sizeof(codcont),posrandom);
-        fprintf(fpuerto,"K00%d;T=%d;C=%s\n",i+1,GenerarRandom(0,conf->duracion_jornada-FIN_LLEGADA),codcont);
+        fprintf(fpuerto,"K00%d;T=%d;C=%s\n",i+1,tiempo,codcont);
+        sprintf(camion.codcamion,"K00%d",i+1);
+        strcpy(camion.codcont, codcont);
+        EnQueue(camiones, &camion, sizeof(tCamion));
         total_contenedores--;
         i++;
     }
