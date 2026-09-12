@@ -75,7 +75,7 @@ int CargarConfiguracion(char *nomarch, tConfig *conf){
 int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     tBuque buque;
     tCamion camion;
-    char codcont[30];
+    char codcont[TAM_COD];
     int i,j,total_contenedores=0,cant_buques, cant_camiones,cant_contenedores, posrandom,tiempo=0;
     tLista lista;
     FILE *fpuerto=fopen(sim, "wt");
@@ -136,6 +136,20 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
 
 int GenerarRandom(int min, int max){
     return min+ rand() % (max-min+1);
+}
+
+int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
+    tZona zona;
+    while(cant_zonas){
+        zona.nrozona=cant_zonas;
+        zona.cantcont=0;
+        zona.maxcont=cap_pila;
+        CreateStack(&(zona.pilacont));
+        if(!InsPrinLista(zonas, &zona, sizeof(tZona)))
+            return ERROR_MALLOC;
+        cant_zonas--;
+    }
+    return EXITO;
 }
 
 

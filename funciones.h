@@ -13,16 +13,18 @@
 #define POS_INVALIDA -1
 #define FIN_LLEGADA 5 //tiempo antes de que termine la jornada en el que no pueden llegar mas buques
 #define COLA_VACIA 0
+#define PILA_LLENA 0
+#define TAM_COD 30
 
 typedef struct{
-    char cod[10];
+    char cod[TAM_COD];
     int tiempo;
     tCola contenedores;
 }tBuque;
 
 typedef struct{
-    char codcamion[10];
-    char codcont[10];
+    char codcamion[TAM_COD];
+    char codcont[TAM_COD];
 }tCamion;
 
 typedef struct{
@@ -44,8 +46,17 @@ typedef struct{
     int tiempo_carga; // minutos consumidos para retirar un contenedor del tope de una zona y cargarlo en el cami�n que corresponda.
 }tConfig;
 
+typedef struct{
+    int nrozona;
+    int cantcont;
+    int maxcont;
+    tPila pilacont;
+}tZona;
+
 int CargarConfiguracion(char *nomarch, tConfig *conf);
 int GenerarRandom(int liminf, int limsup);
 int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones);
+int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila);
+
 
 #endif // FUNCIONES_H_INCLUDED

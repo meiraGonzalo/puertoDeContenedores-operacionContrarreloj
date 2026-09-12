@@ -42,7 +42,7 @@ int AsignarBuques(tCola *buques, tLista *muelles, int tiempo){
 }
 
 void MostrarMuelle(void *info, void *sin_usar){
-    char codcont[10];
+    char codcont[TAM_COD];
     tMuelle *muelle=(tMuelle*)info;
     if(muelle->estado==0){
     tBuque buque=muelle->asignado;
