@@ -88,13 +88,13 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     fprintf(fpuerto,"ZONAS: %d\n",conf->cant_zonas);
     fprintf(fpuerto,"CAPACIDAD_PILA: %d\n",conf->cap_pila);
     fprintf(fpuerto,"\n[BUQUES]\n");
-    cant_buques=GenerarRandom(1, conf->max_buques);
+    cant_buques=GenerarRandom(MIN_BUQUES, conf->max_buques);
     i=0;
     while(i<cant_buques){
         if(i!=0) //el primero de los buques siempre llegara en t=0
             tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA); //asi se mantiene el orden de llegada en el archivo
         fprintf(fpuerto,"B00%d;T=%d;C=",i+1,tiempo);
-        cant_contenedores=GenerarRandom(1,conf->max_cont_buque);
+        cant_contenedores=GenerarRandom(MIN_CONT_BUQUE,conf->max_cont_buque);
         j=0;
         sprintf(buque.cod, "B00%d",i+1);
         buque.tiempo=tiempo;
@@ -116,15 +116,17 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     fprintf(fpuerto,"\n[CAMIONES]\n");
     i=0;
     tiempo=0;
-    cant_camiones=GenerarRandom(1, conf->max_camiones);
+    cant_camiones=GenerarRandom(MIN_CAMIONES, conf->max_camiones);
     cant_camiones=(cant_camiones>total_contenedores)?total_contenedores:cant_camiones;
     while(i<cant_camiones){
         posrandom=GenerarRandom(0, total_contenedores-1);
-        tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA);
+        if(i!=0)
+            tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA);
         OutPosLista(&lista, codcont, sizeof(codcont),posrandom);
         fprintf(fpuerto,"K00%d;T=%d;C=%s\n",i+1,tiempo,codcont);
         sprintf(camion.codcamion,"K00%d",i+1);
         strcpy(camion.codcont, codcont);
+        camion.tiempo=tiempo;
         EnQueue(camiones, &camion, sizeof(tCamion));
         total_contenedores--;
         i++;
@@ -135,7 +137,12 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
 }
 
 int GenerarRandom(int min, int max){
+    max=(min+3>max)?max:min+3;
     return min+ rand() % (max-min+1);
+}
+
+int ValidarRangoInt(int num, int liminf, int limsup){
+    return (num>=liminf && num<=limsup)?1:0;
 }
 
 int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
@@ -152,4 +159,61 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
     return EXITO;
 }
 
+int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camiones, int *tiempo, tConfig conf){
+    int pos_instr, param1, param2 ;
+    char *aux;
+    char *instr_validas[]={"DES","REU","VER","ENT","ESP"};
+    aux=strchr(linea,' ');
+    if(!aux)
+        aux=strchr(linea,'\n');
+    *aux=0;
+    pos_instr=BuscarParametro(linea, instr_validas);
+    if(pos_instr==-1)
+        return INSTR_INVALIDA;
+    if(pos_instr==0 || pos_instr==1){//buscamos los parametro si es DES o REU
+        linea=aux+1;
+        aux=strchr(linea, ' ');
+        *aux=0;
+        sscanf(linea, "%d", &param1);
+        linea=aux+1;
+        aux=strchr(linea, '\n');
+        *aux=0;
+        sscanf(linea, "%d", &param2);
+        if(pos_instr==0 && (!ValidarRangoInt(param1,1,conf.cantidad_muelles) || !ValidarRangoInt(param2, 1,conf.cant_zonas)))
+            return PARAM_INVALIDO;
+        if(pos_instr==1 && (!ValidarRangoInt(param1,1,conf.cant_zonas) || !ValidarRangoInt(param2, 1,conf.cant_zonas)))
+            return PARAM_INVALIDO;
+    }
+    switch(pos_instr){
+        case 0: //DES
+            Descargar(muelles, zonas, param1, param2);
+            *tiempo+=conf.tiempo_descarga;
+            printf("T=%d\n",*tiempo);
+            RecorrerLista(zonas, VerZona, NULL);
+            printf("\n");
+            break;
+        case 1: //REU
+            if(!Reubicar(zonas, param1, param2))
+                fprintf(stderr,"ERROR: Verificar que la zona origen no este vacia y que la zona destino no este llena\n");
+            *tiempo+=conf.tiempo_reubi;
+            printf("T=%d\n",*tiempo);
 
+            RecorrerLista(zonas, VerZona, NULL);
+            break;
+        case 2: //VER
+            VerCamiones(camiones, VER_CAMIONES,*tiempo);
+            break;
+        case 3: //ENT
+            if(!Entregar(zonas,camiones))
+                fprintf(stderr, "ERROR: El contenedor pedido no esta en el tope de la pila de una zona\n");
+            *tiempo+=conf.tiempo_carga;
+            printf("T=%d\n", *tiempo);
+            break;
+        case 4:
+            *tiempo+=1;
+            printf("T=%d\n", *tiempo);
+
+            break;
+    }
+    return EXITO;
+}

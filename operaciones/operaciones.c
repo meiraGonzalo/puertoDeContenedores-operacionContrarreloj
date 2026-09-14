@@ -32,7 +32,7 @@ void VerZona(void *info, void *sin_usar){ //hace falta crear una nueva pila y mo
     while(PopStack(&(zona->pilacont), codcont, sizeof(codcont))){
         PushStack(&pilaAux, codcont, strlen(codcont)+1);
         printf("%s", codcont);
-        if(PeekStack(&pilaAux,codcont,sizeof(codcont)))
+        if(PeekStack(&(zona->pilacont),codcont,sizeof(codcont)))
             printf("|");
     }
     //restauramos pila original
@@ -43,24 +43,72 @@ void VerZona(void *info, void *sin_usar){ //hace falta crear una nueva pila y mo
 }
 
 
-void VerCamiones(tCola *camiones, int cant){//hace falta crear una nueva cola y mover todos lo elementos ahi para luefo restaurar la original
+void VerCamiones(tCola *camiones, int cant, int tiempo_actual){//hace falta crear una nueva cola y mover todos lo elementos ahi para luefo restaurar la original
     tCamion camion;
     tCola colaAux;
+    int i=1;
     CreateQueue(&colaAux);
     printf("Cola Camiones: ");
     if(!ViewFirst(camiones, &camion, sizeof(tCamion)))
        printf("vacia");
+    printf("\n");
     while(DeQueue(camiones, &camion, sizeof(tCamion))){
         EnQueue(&colaAux, &camion,sizeof(tCamion));
-        if(cant>0){
-        printf("%s",camion.codcamion);
-        if(ViewFirst(camiones,&camion, sizeof(tCamion)) && cant>1)
-            printf(",");
+        if(cant>0 && (camion.tiempo<=tiempo_actual)){
+        printf("%d)%s --> %s\n",i,camion.codcamion, camion.codcont);
         }
         cant--;
+        i++;
     }
     printf("\n");
     //restauramos la cola original
     while(DeQueue(&colaAux, &camion, sizeof(tCamion)))
         EnQueue(camiones, &camion, sizeof(tCamion));
+}
+
+int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
+    char codcont[TAM_COD];
+    int pos_origen=nro_origen-1, pos_destino=nro_destino-1;
+    tZona zona_ori, zona_dest;
+    //verificamos que la zona destino no este llena
+    OutPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
+    if(zona_dest.cantcont>=zona_dest.maxcont)
+        return PILA_LLENA;
+    //quitamos el contenedor de la zona origen
+    OutPosLista(zonas, &zona_ori,sizeof(tZona), pos_origen);
+    if(zona_ori.cantcont==0)
+        return PILA_VACIA;
+    PopStack(&(zona_ori.pilacont), codcont, sizeof(codcont));
+    zona_ori.cantcont--;
+    InsPosLista(zonas, &zona_ori,sizeof(tZona), pos_origen);
+    // lo ponemos en la zona destino
+    PushStack(&(zona_dest.pilacont),codcont,strlen(codcont)+1);
+    zona_dest.cantcont++;
+    InsPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
+    return EXITO;
+}
+
+int CmpContTope(void *info_codcont, void *info_zona){
+    char conttope[TAM_COD];
+    char *codcont=(char*)info_codcont;
+    tZona *zona=(tZona*)info_zona;
+    PeekStack(&(zona->pilacont), conttope, sizeof(codcont));
+    return strcmpi(conttope, codcont);
+}
+
+int Entregar(tLista *zonas, tCola *camiones){
+    int pos_zona;
+    char codcont[TAM_COD];
+    tCamion camion;
+    tZona zona;
+    ViewFirst(camiones, &camion, sizeof(camion));
+    pos_zona=BuscLista(zonas, camion.codcamion, CmpContTope);
+    if(pos_zona==-1)
+        return NO_ENCONTRADO;
+    OutPosLista(zonas, &zona, sizeof(tZona),pos_zona);
+    PopStack(&(zona.pilacont), codcont, sizeof(codcont));
+    InsPosLista(zonas, &zona, sizeof(tZona),pos_zona);
+    printf("\ncontenedor %s entregado al camion %s", codcont, camion.codcamion);
+    return EXITO;
+
 }

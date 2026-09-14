@@ -24,7 +24,7 @@ int AsignarBuques(tCola *buques, tLista *muelles, int tiempo){
     tBuque buque;
     tMuelle muelle,muelle_libre, muelleaux;
     muelle_libre.estado=1;
-    if(!ViewFirst(buques, &buque, sizeof(tBuque))){
+    if(!(hay_encolados=ViewFirst(buques, &buque, sizeof(tBuque)))){
         return COLA_VACIA;
     }
     while(buque.tiempo<=tiempo && poslibre!=-1 && hay_encolados){
@@ -49,4 +49,13 @@ void MostrarMuelle(void *info, void *sin_usar){
     ViewFirst(&(buque.contenedores), codcont, sizeof(codcont));
     printf("M%d: %s --> proximo contenedor: %s \n",muelle->nro, buque.cod,codcont);
     }
+}
+
+void LiberarVacios(void *infoMuelle, void *sinUsar){
+    tMuelle *muelle=(tMuelle*)infoMuelle;
+    if(IsEmptyQueue(&((muelle->asignado).contenedores)))
+        muelle->estado=1;
+}
+void EmbarcarBuquesVacios(tLista *muelles){
+    RecorrerLista(muelles, LiberarVacios, NULL);
 }

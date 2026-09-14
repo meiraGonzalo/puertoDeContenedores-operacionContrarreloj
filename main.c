@@ -7,6 +7,8 @@
 
 int main()
 {
+    char buffer_consola[TAM_CONSOLA];
+    int tiempo=0;
     srand(time(NULL));
     tConfig conf;
     tCola buques;
@@ -26,10 +28,17 @@ int main()
         return ERROR;
     }
     InicializarMuelles(&muelles, conf.cantidad_muelles);
-    AsignarBuques(&buques, &muelles, 20);
-    RecorrerLista(&muelles, MostrarMuelle, NULL);
     InicializarZonas(&zonas, conf.cant_zonas, conf.cap_pila);
-    VerCamiones(&camiones, 3);
-    VerCamiones(&camiones,4);
+
+    while(tiempo<=conf.duracion_jornada){
+        EmbarcarBuquesVacios(&muelles);
+        AsignarBuques(&buques, &muelles, tiempo);
+        RecorrerLista(&muelles, MostrarMuelle, NULL);
+        printf("\n<Operador>");
+        fgets(buffer_consola, sizeof(buffer_consola), stdin);
+        ProcesarInstruccion(buffer_consola, &muelles, &zonas, &camiones, &tiempo, conf);
+    }
+    VerCamiones(&camiones, 3, tiempo);
+    VerCamiones(&camiones,4, tiempo);
     return FIN;
 }
