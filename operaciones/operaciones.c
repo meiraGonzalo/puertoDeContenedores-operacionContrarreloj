@@ -88,11 +88,14 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
     return EXITO;
 }
 
-int CmpContTope(void *info_codcont, void *info_zona){
+int CmpContTope(void *info_zona, void *info_codcont){
     char conttope[TAM_COD];
     char *codcont=(char*)info_codcont;
     tZona *zona=(tZona*)info_zona;
-    PeekStack(&(zona->pilacont), conttope, sizeof(codcont));
+    if(IsEmptyStack(&(zona->pilacont))){
+        return -1;
+    }
+    PeekStack(&(zona->pilacont), conttope, sizeof(conttope));
     return strcmpi(conttope, codcont);
 }
 
@@ -101,14 +104,16 @@ int Entregar(tLista *zonas, tCola *camiones){
     char codcont[TAM_COD];
     tCamion camion;
     tZona zona;
-    ViewFirst(camiones, &camion, sizeof(camion));
-    pos_zona=BuscLista(zonas, camion.codcamion, CmpContTope);
+    if(!ViewFirst(camiones, &camion, sizeof(camion)))
+        return COLA_VACIA;
+    pos_zona=BuscLista(zonas, camion.codcont, CmpContTope);
     if(pos_zona==-1)
         return NO_ENCONTRADO;
+    DeQueue(camiones, &camion, sizeof(tCamion));
     OutPosLista(zonas, &zona, sizeof(tZona),pos_zona);
     PopStack(&(zona.pilacont), codcont, sizeof(codcont));
     InsPosLista(zonas, &zona, sizeof(tZona),pos_zona);
-    printf("\ncontenedor %s entregado al camion %s", codcont, camion.codcamion);
+    printf("\ncontenedor %s entregado al camion %s\n", codcont, camion.codcamion);
     return EXITO;
 
 }

@@ -16,8 +16,8 @@
 #define TAM_CONSOLA 30 //el maximo de caracteres que seran captados cuando el usuario escriba algo por consola
 #define VER_CAMIONES 3
 #define NO_ENCONTRADO 0
-#define MIN_CAMIONES 5
-#define MIN_BUQUES 3
+#define MIN_CAMIONES 6
+#define MIN_BUQUES 6
 #define MIN_CONT_BUQUE 2
 
 

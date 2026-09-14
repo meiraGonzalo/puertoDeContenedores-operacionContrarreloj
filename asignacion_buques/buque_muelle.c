@@ -28,8 +28,8 @@ int AsignarBuques(tCola *buques, tLista *muelles, int tiempo){
         return COLA_VACIA;
     }
     while(buque.tiempo<=tiempo && poslibre!=-1 && hay_encolados){
-        DeQueue(buques, &buque,sizeof(tBuque));
         if((poslibre=BuscLista(muelles, &muelle_libre, CmpEstado))!=-1){ //encontrara el primer muelle libre
+            DeQueue(buques, &buque,sizeof(tBuque));
             muelle.nro=poslibre+1;
             muelle.asignado=buque;
             muelle.estado=0;
@@ -53,7 +53,7 @@ void MostrarMuelle(void *info, void *sin_usar){
 
 void LiberarVacios(void *infoMuelle, void *sinUsar){
     tMuelle *muelle=(tMuelle*)infoMuelle;
-    if(IsEmptyQueue(&((muelle->asignado).contenedores)))
+    if(muelle->estado==0 && IsEmptyQueue(&((muelle->asignado).contenedores)))
         muelle->estado=1;
 }
 void EmbarcarBuquesVacios(tLista *muelles){

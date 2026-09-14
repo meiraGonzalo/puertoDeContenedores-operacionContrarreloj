@@ -173,6 +173,8 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
     if(pos_instr==0 || pos_instr==1){//buscamos los parametro si es DES o REU
         linea=aux+1;
         aux=strchr(linea, ' ');
+        if(!aux)
+            return PARAM_INVALIDO;
         *aux=0;
         sscanf(linea, "%d", &param1);
         linea=aux+1;
@@ -195,10 +197,13 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
         case 1: //REU
             if(!Reubicar(zonas, param1, param2))
                 fprintf(stderr,"ERROR: Verificar que la zona origen no este vacia y que la zona destino no este llena\n");
-            *tiempo+=conf.tiempo_reubi;
-            printf("T=%d\n",*tiempo);
+            else{
+                *tiempo+=conf.tiempo_reubi;
+                printf("T=%d\n",*tiempo);
+            }
 
             RecorrerLista(zonas, VerZona, NULL);
+            printf("\n");
             break;
         case 2: //VER
             VerCamiones(camiones, VER_CAMIONES,*tiempo);
@@ -206,10 +211,12 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
         case 3: //ENT
             if(!Entregar(zonas,camiones))
                 fprintf(stderr, "ERROR: El contenedor pedido no esta en el tope de la pila de una zona\n");
+            else{
             *tiempo+=conf.tiempo_carga;
             printf("T=%d\n", *tiempo);
+            }
             break;
-        case 4:
+        case 4://ESP
             *tiempo+=1;
             printf("T=%d\n", *tiempo);
 
