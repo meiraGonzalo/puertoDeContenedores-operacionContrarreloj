@@ -1,0 +1,6 @@
+#ifndef SIMULACION_H_INCLUDED
+#define SIMULACION_H_INCLUDED
+
+int simulacion();
+
+#endif // SIMULACION_H_INCLUDED

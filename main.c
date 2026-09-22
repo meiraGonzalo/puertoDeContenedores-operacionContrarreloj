@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "menu/menu.h"
 
 int main()
 {
-    printf("Hello world!\n");
+    int opcion = STANDBY;
+
+    while (opcion != EXIT)
+    {
+        menu();
+        seleccionarMenu(&opcion);
+        dirigir(opcion);
+    }
+
     return 0;
 }

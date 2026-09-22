@@ -34,6 +34,14 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="menu/menu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="menu/menu.h" />
+		<Unit filename="simulacion/simulacion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="simulacion/simulacion.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
