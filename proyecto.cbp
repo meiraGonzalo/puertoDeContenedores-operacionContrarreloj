@@ -31,6 +31,36 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="asignacion_buques/buque_muelle.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="asignacion_buques/buque_muelle.h" />
+		<Unit filename="bibliotecas/nodo/nodo.h" />
+		<Unit filename="bibliotecas/tdaColaDinamica/cola_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaColaDinamica/cola_dinamica.h" />
+		<Unit filename="bibliotecas/tdaColaEstatica/tdaCola.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaColaEstatica/tdaCola.h" />
+		<Unit filename="bibliotecas/tdaListaDinamica/lista_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaListaDinamica/lista_dinamica.h" />
+		<Unit filename="bibliotecas/tdaPilaDinamica/pila_dinamica.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaPilaDinamica/pila_dinamica.h" />
+		<Unit filename="bibliotecas/tdaPilaEstatica/tdaPila.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaPilaEstatica/tdaPila.h" />
+		<Unit filename="funciones.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="funciones.h" />
+		<Unit filename="globales/globales.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -38,6 +68,14 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="menu/menu.h" />
+		<Unit filename="operaciones/operaciones.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="operaciones/operaciones.h" />
+		<Unit filename="simulacion/configuracion/configuracion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="simulacion/configuracion/configuracion.h" />
 		<Unit filename="simulacion/simulacion.c">
 			<Option compilerVar="CC" />
 		</Unit>
