@@ -21,9 +21,9 @@
 #define TAM_CONSOLA 30 //el maximo de caracteres que seran captados cuando el usuario escriba algo por consola
 #define VER_CAMIONES 3
 #define NO_ENCONTRADO 0
-#define MIN_CAMIONES 6
-#define MIN_BUQUES 6
-#define MIN_CONT_BUQUE 2
+#define MIN_CAMIONES 1
+#define MIN_BUQUES 1
+#define MIN_CONT_BUQUE 1
 
 
 #include "../bibliotecas/tdaColaDinamica/cola_dinamica.h"
@@ -67,5 +67,15 @@ typedef struct
     int tiempo_reubicacion;
     int tiempo_carga;
 } tConfig;
+
+typedef struct
+{
+    int tiempo_actual;
+    tCola buques_programados;
+    tCola camiones_programados;
+    tLista muelles;
+    tLista zonas;
+} tEstado;
+
 
 #endif // GLOBALES_H_INCLUDED

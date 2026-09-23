@@ -7,5 +7,6 @@
 #include "configuracion/configuracion.h"
 
 int simulacion();
+void estadoIniciar(tEstado* sistema);
 
 #endif // SIMULACION_H_INCLUDED
