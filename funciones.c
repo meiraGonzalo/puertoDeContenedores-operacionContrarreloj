@@ -163,3 +163,10 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
     }
     return EXITO;
 }
+
+void muellesVacios (void * a, void* flag)
+{
+    tMuelle* m = (tMuelle*)a;
+    int* f = (int*)flag;
+    if (m->estado != 0) *f = m->estado;
+}

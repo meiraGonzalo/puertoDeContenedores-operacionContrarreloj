@@ -8,5 +8,6 @@
 
 int simulacion();
 void estadoIniciar(tEstado* sistema);
+int bloqueoOperativo (tEstado* sis, tCola* camionesEspera);
 
 #endif // SIMULACION_H_INCLUDED

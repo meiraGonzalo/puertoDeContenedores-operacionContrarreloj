@@ -28,7 +28,7 @@ int simulacion()
     InicializarMuelles(&sim.muelles, config.cantidad_muelles);
     InicializarZonas(&sim.zonas, config.cantidad_zonas, config.capacidad_pila);
 
-    while(sim.tiempo_actual<=config.duracion_jornada){
+    while(sim.tiempo_actual<=config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         EmbarcarBuquesVacios(&sim.muelles);
         AsignarBuques(&sim.buques_programados, &sim.muelles, sim.tiempo_actual);
         RecorrerLista(&sim.muelles, MostrarMuelle, NULL);
@@ -46,4 +46,28 @@ void estadoIniciar(tEstado* sistema)
     CrearLista(&sistema->muelles);
     CrearLista(&sistema->zonas);
     sistema->tiempo_actual = 0;
+}
+
+int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
+{
+    int bloqueo = EXITO, flag = 0;
+
+    if (!IsEmptyQueue(&sis->buques_programados))
+    {
+        bloqueo = FALLO;
+    }
+    if(!IsEmptyQueue(&sis->camiones_programados))
+    {
+        bloqueo = FALLO;
+    }
+    if(!IsEmptyQueue(camionesEspera))
+    {
+        bloqueo = FALLO;
+    }
+    RecorrerLista(&sis->muelles, muellesVacios, &flag);
+    if (flag)
+    {
+        bloqueo = FALLO;
+    }
+    return bloqueo;
 }
