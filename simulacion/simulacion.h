@@ -10,5 +10,6 @@
 int simulacion();
 void estadoIniciar(tEstado* sistema);
 int bloqueoOperativo (tEstado* sis, tCola* camionesEspera);
+void avanzarRelojAuto (tEstado*);
 
 #endif // SIMULACION_H_INCLUDED

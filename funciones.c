@@ -88,6 +88,7 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
         tiemposCamRand[i] = GenerarRandom(0, finLlegada);
     }
     ordenarTiempos(tiemposCamRand, cant_camiones);
+    i=0;
     while(i<cant_camiones){
         posrandom=GenerarRandom(0, total_contenedores-1);
         OutPosLista(&lista, codcont, sizeof(codcont),posrandom);
@@ -276,4 +277,11 @@ int contarBuquesEspera (tCola* buquesEspera)
         EnQueue(buquesEspera, &b, sizeof(tBuque));
 
     return i;
+}
+
+int todosMuellesVacios(tLista* muelles)
+{
+    int todosVacios = 1;
+    RecorrerLista(muelles, muellesVacios, &todosVacios);
+    return todosVacios;
 }

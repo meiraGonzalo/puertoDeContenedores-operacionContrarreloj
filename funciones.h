@@ -18,6 +18,7 @@ int ValidarRangoInt(int num, int liminf, int limsup);
 void muellesVacios (void* a, void* flag);
 void ordenarTiempos(int tiemposGenerados[], int cantidadElementos);
 int contarBuquesEspera (tCola* buquesEspera);
+int todosMuellesVacios (tLista* muelles);
 
 
 #endif // FUNCIONES_H_INCLUDED

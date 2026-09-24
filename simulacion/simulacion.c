@@ -56,6 +56,8 @@ int simulacion()
     system("cls");
     printf("Bievenido a Operacion Contrarreloj!\n\n");
     while(sim.tiempo_actual<config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
+        if(IsEmptyQueue(&camionesEspera) && todosMuellesVacios(&sim.muelles))
+            avanzarRelojAuto(&sim);
         EmbarcarBuquesVacios(&sim.muelles, &usuario);
         AsignarBuques(&sim.buques_programados, &sim.muelles, &buquesEspera, sim.tiempo_actual);
         asignarCamiones(&sim, &camionesEspera);
@@ -97,7 +99,7 @@ void estadoIniciar(tEstado* sistema)
 
 int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
 {
-    int bloqueo = EXITO, todosVacios = 1;
+    int bloqueo = EXITO;
 
     if (!IsEmptyQueue(&sis->buques_programados))
     {
@@ -111,10 +113,21 @@ int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
     {
         bloqueo = FALLO;
     }
-    RecorrerLista(&sis->muelles, muellesVacios, &todosVacios);
-    if (!todosVacios)
+    if (!todosMuellesVacios(&sis->muelles))
     {
         bloqueo = FALLO;
     }
     return bloqueo;
+}
+
+void avanzarRelojAuto (tEstado* sim)
+{
+    tBuque b;
+    tCamion c;
+    int minutos;
+    if (!ViewFirst(&sim->buques_programados, &b, sizeof(tBuque))) b.tiempo = sim->tiempo_actual;
+    if (!ViewFirst(&sim->camiones_programados, &c, sizeof(tCamion))) c.tiempo = sim->tiempo_actual;
+    minutos = (b.tiempo-sim->tiempo_actual) <= (c.tiempo - sim->tiempo_actual) ? (b.tiempo-sim->tiempo_actual) : (c.tiempo - sim->tiempo_actual);
+    sim->tiempo_actual += minutos;
+    printf ("Se avanzo automaticamente %d minuto/s\n", minutos);
 }
