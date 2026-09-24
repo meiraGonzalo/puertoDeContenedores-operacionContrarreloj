@@ -55,11 +55,17 @@ void MostrarMuelle(void *info, void *sin_usar){
     }
 }
 
-void LiberarVacios(void *infoMuelle, void *sinUsar){
+void LiberarVacios(void *infoMuelle, void *usuario)
+{
     tMuelle *muelle=(tMuelle*)infoMuelle;
+    tOperador* user = (tOperador*)usuario;
     if(muelle->estado==0 && IsEmptyQueue(&((muelle->asignado).contenedores)))
+    {
         muelle->estado=1;
+        user->buquesDescargados++;
+        user->puntuacion +=5;
+    }
 }
-void EmbarcarBuquesVacios(tLista *muelles){
-    RecorrerLista(muelles, LiberarVacios, NULL);
+void EmbarcarBuquesVacios(tLista *muelles, tOperador* usuario){
+    RecorrerLista(muelles, LiberarVacios, usuario);
 }

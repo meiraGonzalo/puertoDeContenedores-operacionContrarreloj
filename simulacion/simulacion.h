@@ -5,6 +5,7 @@
 #include "../funciones.h"
 #include "../globales/globales.h"
 #include "configuracion/configuracion.h"
+#include "../usuario/usuario.h"
 
 int simulacion();
 void estadoIniciar(tEstado* sistema);

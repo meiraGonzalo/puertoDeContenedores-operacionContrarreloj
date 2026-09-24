@@ -25,6 +25,7 @@
 #define MIN_CAMIONES 1
 #define MIN_BUQUES 1
 #define MIN_CONT_BUQUE 1
+#define TAM_MAXIMO_NOMBRE_OP 51
 
 
 #include "../bibliotecas/tdaColaDinamica/cola_dinamica.h"
@@ -78,5 +79,15 @@ typedef struct
     tLista zonas;
 } tEstado;
 
+typedef struct
+{
+    char nombre[TAM_MAXIMO_NOMBRE_OP];
+    int puntuacion;
+    int contenEntregados;
+    int buquesDescargados;
+    int camionesPend;
+    int cantReubicar;
+    int jornadas;
+} tOperador;
 
 #endif // GLOBALES_H_INCLUDED

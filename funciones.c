@@ -127,7 +127,7 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
     return EXITO;
 }
 
-int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camiones, int *tiempo, tConfig conf){
+int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario){
     int pos_instr, param1, param2 ;
     char *aux;
     char *instr_validas[]={"DES","REU","VER","ENT","ESP"};
@@ -166,7 +166,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
             printf("\n");
             break;
         case 1: //REU
-            if(!Reubicar(zonas, param1, param2))
+            if(!Reubicar(zonas, param1, param2, usuario))
                 fprintf(stderr,"ERROR: Verificar que la zona origen no este vacia y que la zona destino no este llena\n");
             else{
                 *tiempo+=conf.tiempo_reubicacion;
@@ -180,7 +180,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
             VerCamiones(camiones, VER_CAMIONES,*tiempo);
             break;
         case 3: //ENT
-            if(!Entregar(zonas,camiones))
+            if(!Entregar(zonas,camiones, usuario))
                 fprintf(stderr, "ERROR: El contenedor pedido no esta en el tope de la pila de una zona\n");
             else{
             *tiempo+=conf.tiempo_carga;

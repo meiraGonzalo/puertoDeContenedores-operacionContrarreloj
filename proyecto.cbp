@@ -80,6 +80,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="simulacion/simulacion.h" />
+		<Unit filename="usuario/usuario.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="usuario/usuario.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

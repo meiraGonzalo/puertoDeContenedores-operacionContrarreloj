@@ -11,6 +11,6 @@
 int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona);
 void VerZona(void *zona, void *sin_usar);
 void VerCamiones(tCola *camiones, int cant, int tiempo_actual);
-int Reubicar(tLista *zonas, int zona_origen, int zona_destino);
-int Entregar(tLista *zonas, tCola *camiones);
+int Reubicar(tLista *zonas, int zona_origen, int zona_destino, tOperador* usuario);
+int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario);
 #endif // OP_H_INCLUDED

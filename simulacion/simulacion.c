@@ -4,8 +4,11 @@ int simulacion()
 {
     tConfig config;
     tEstado sim;
+    tOperador usuario;
     tCola buquesEspera;
     tCola camionesEspera;
+    tCamion c;
+    int camionesPendientes = 0;
 
     system("cls");
     if(!cargarConfiguracion(&config))
@@ -18,6 +21,7 @@ int simulacion()
     srand(time(NULL));
 
     estadoIniciar(&sim);
+    iniciarUsuario(&usuario);
     CreateQueue(&buquesEspera);
     CreateQueue(&camionesEspera);
 
@@ -37,13 +41,25 @@ int simulacion()
     }
 
     while(sim.tiempo_actual<=config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
-        EmbarcarBuquesVacios(&sim.muelles);
+        EmbarcarBuquesVacios(&sim.muelles, &usuario);
         AsignarBuques(&sim.buques_programados, &sim.muelles, sim.tiempo_actual);
         RecorrerLista(&sim.muelles, MostrarMuelle, NULL);
         printf("\n<Operador>");
         fgets(buffer_consola, sizeof(buffer_consola), stdin);
-        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &camionesEspera, &sim.tiempo_actual, config);
+        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &camionesEspera, &sim.tiempo_actual, config, &usuario);
     }
+    if(bloqueoOperativo(&sim, &camionesEspera))
+        printf ("Finaliza la jornada por no quedar acciones significativas por realizarse\n");
+    else if (sim.tiempo_actual<=config.duracion_jornada)
+        printf ("Finaliza la jornada por cumplirse su duracion establecida\n");
+    while (DeQueue(&camionesEspera, &c, sizeof(tCamion)))
+    {
+        camionesPendientes++;
+    }
+    usuario.camionesPend = camionesPendientes;
+    usuario.puntuacion -= camionesPendientes*2;
+    mostrarResumenUser(&config, &sim, &usuario);
+
     return EXITO;
 }
 

@@ -66,7 +66,7 @@ void VerCamiones(tCola *camiones, int cant, int tiempo_actual){//hace falta crea
         EnQueue(camiones, &camion, sizeof(tCamion));
 }
 
-int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
+int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario){
     char codcont[TAM_COD];
     int pos_origen=nro_origen-1, pos_destino=nro_destino-1;
     tZona zona_ori, zona_dest;
@@ -85,6 +85,7 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
     PushStack(&(zona_dest.pilacont),codcont,strlen(codcont)+1);
     zona_dest.cantcont++;
     InsPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
+    usuario->cantReubicar++;
     return EXITO;
 }
 
@@ -99,7 +100,7 @@ int CmpContTope(void *info_zona, void *info_codcont){
     return strcmpi(conttope, codcont);
 }
 
-int Entregar(tLista *zonas, tCola *camiones){
+int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario){
     int pos_zona;
     char codcont[TAM_COD];
     tCamion camion;
@@ -114,6 +115,8 @@ int Entregar(tLista *zonas, tCola *camiones){
     PopStack(&(zona.pilacont), codcont, sizeof(codcont));
     InsPosLista(zonas, &zona, sizeof(tZona),pos_zona);
     printf("\ncontenedor %s entregado al camion %s\n", codcont, camion.codcamion);
+    usuario->puntuacion += 10;
+    usuario->contenEntregados++;
     return EXITO;
 
 }
