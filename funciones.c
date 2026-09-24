@@ -188,10 +188,14 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
             }
             break;
         case 4://ESP
+            if(*tiempo+1 > conf.duracion_jornada)
+            {
+                fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+                return FALLO;
+            }
             fprintf(log, "CODIGO:ESP\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\n", *tiempo, *tiempo+1);
             *tiempo+=1;
             printf("T=%d\n", *tiempo);
-
             break;
     }
     return EXITO;
@@ -202,4 +206,22 @@ void muellesVacios (void * a, void* flag)
     tMuelle* m = (tMuelle*)a;
     int* f = (int*)flag;
     if (m->estado == 0) *f = m->estado;
+}
+
+int EscenarioRealizable (tConfig conf)
+{
+    int tiempoOperacion = conf.cant_max_buques*conf.cant_max_contenedores*conf.tiempo_descarga + conf.cant_max_camiones*conf.tiempo_carga;
+
+    if (tiempoOperacion > conf.duracion_jornada)
+    {
+        fprintf (stderr, "WARNING: El tiempo de operacion del puerto en su maxima capacida excede la duracion de la jornada\n");
+        return FALLO;
+    }
+    if (conf.cantidad_muelles <=0 || conf.cantidad_zonas <=0 || conf.capacidad_pila <= 0)
+    {
+        fprintf(stderr, "WARNING: El puerto carece de infraestructura suficiente (muelles, zonas y pilas) para procesar las operaciones\n");
+        return FALLO;
+    }
+
+    return EXITO;
 }

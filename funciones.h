@@ -9,10 +9,7 @@
 #include <time.h>
 #include "globales/globales.h"
 
-
-
-
-int CargarConfiguracion(char *nomarch, tConfig *conf);
+int EscenarioRealizable (tConfig conf);
 int GenerarRandom(int liminf, int limsup);
 int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones);
 int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila);

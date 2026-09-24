@@ -6,6 +6,13 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
     tZona zona;
     tMuelle muelle;
     tBuque buque;
+
+    if(*tiempo+conf.tiempo_descarga > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     //verificamos que haya espacio en la zona
     OutPosLista(zonas, &zona, sizeof(tZona), poszona);
     if(zona.cantcont>=zona.maxcont)
@@ -71,6 +78,13 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario,
     char codcont[TAM_COD];
     int pos_origen=nro_origen-1, pos_destino=nro_destino-1;
     tZona zona_ori, zona_dest;
+
+    if(*tiempo+conf.tiempo_reubicacion > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     //verificamos que la zona destino no este llena
     OutPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
     if(zona_dest.cantcont>=zona_dest.maxcont)
@@ -108,6 +122,13 @@ int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario, FILE* log, int 
     char codcont[TAM_COD];
     tCamion camion;
     tZona zona;
+
+    if(*tiempo+conf.tiempo_carga > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     if(!ViewFirst(camiones, &camion, sizeof(camion)))
         return COLA_VACIA;
     pos_zona=BuscLista(zonas, camion.codcont, CmpContTope);

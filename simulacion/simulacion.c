@@ -11,13 +11,6 @@ int simulacion()
     int camionesPendientes = 0;
     FILE* log;
 
-    log = fopen("log.txt", "w+t");
-    if (!log)
-    {
-        fprintf (stderr, "ERROR: no se pudo generar el archivo de log temporales\n");
-        return FALLO;
-    }
-
     system("cls");
     if(!cargarConfiguracion(&config))
     {
@@ -32,6 +25,11 @@ int simulacion()
     iniciarUsuario(&usuario);
     CreateQueue(&buquesEspera);
     CreateQueue(&camionesEspera);
+    if (!EscenarioRealizable(config))
+    {
+        system ("pause");
+        //return FALLO; por ahora se permite que la simulacion pueda no ser correctamente finalizable
+    }
 
     if(!GenerarSimulacion("puerto.txt",&config,&sim.buques_programados, &sim.camiones_programados)){
         fprintf(stderr,"ERROR: generacion de archivo puerto.txt no realizada");
@@ -48,7 +46,14 @@ int simulacion()
         return FALLO;
     }
 
-    while(sim.tiempo_actual<=config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
+    log = fopen("log.txt", "w+t");
+    if (!log)
+    {
+        fprintf (stderr, "ERROR: no se pudo generar el archivo de log temporales\n");
+        return FALLO;
+    }
+
+    while(sim.tiempo_actual<config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         EmbarcarBuquesVacios(&sim.muelles, &usuario);
         AsignarBuques(&sim.buques_programados, &sim.muelles, sim.tiempo_actual);
         asignarCamiones(&sim, &camionesEspera);
