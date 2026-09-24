@@ -23,25 +23,43 @@ int CmpEstado(void *a, void *b){ // compara estados entre muelles
         return 0;
     return -1;
 }
-int AsignarBuques(tCola *buques, tLista *muelles, int tiempo){
-    int poslibre=0, hay_encolados;
+int AsignarBuques(tCola *buquesProgramados, tLista *muelles, tCola* buquesEspera, int tiempo)
+{
+    int poslibre;
     tBuque buque;
-    tMuelle muelle,muelle_libre, muelleaux;
-    muelle_libre.estado=1;
-    if(!(hay_encolados=ViewFirst(buques, &buque, sizeof(tBuque)))){
-        return COLA_VACIA;
-    }
-    while(buque.tiempo<=tiempo && poslibre!=-1 && hay_encolados){
-        if((poslibre=BuscLista(muelles, &muelle_libre, CmpEstado))!=-1){ //encontrara el primer muelle libre
-            DeQueue(buques, &buque,sizeof(tBuque));
-            muelle.nro=poslibre+1;
-            muelle.asignado=buque;
-            muelle.estado=0;
-            OutPosLista(muelles, &muelleaux, sizeof(tMuelle),poslibre); //quitamos el nodo que estaba en pos
-            InsPosLista(muelles, &muelle, sizeof(tMuelle),poslibre);// insertamos el nuevo nodo con los datos del muelle
+    tMuelle muelle, muelle_libre, muelleaux;
+    muelle_libre.estado = 1;
+
+    while (ViewFirst(buquesEspera, &buque, sizeof(tBuque))) { //primero revisalos si hay buques ya arribados en espera
+        poslibre = BuscLista(muelles, &muelle_libre, CmpEstado);
+        if (poslibre != POS_INVALIDA) {
+            DeQueue(buquesEspera, &buque, sizeof(tBuque));
+            muelle.nro = poslibre + 1;
+            muelle.asignado = buque;
+            muelle.estado = 0;
+            OutPosLista(muelles, &muelleaux, sizeof(tMuelle), poslibre);
+            InsPosLista(muelles, &muelle, sizeof(tMuelle), poslibre);
+        } else {
+            break;
         }
-        hay_encolados=ViewFirst(buques, &buque, sizeof(tBuque));
     }
+
+    while (ViewFirst(buquesProgramados, &buque, sizeof(tBuque)) && buque.tiempo <= tiempo) { //continuamos con los buques que estan arribando
+        DeQueue(buquesProgramados, &buque, sizeof(tBuque));
+
+        poslibre = BuscLista(muelles, &muelle_libre, CmpEstado);
+
+        if (poslibre != POS_INVALIDA) {
+            muelle.nro = poslibre + 1;
+            muelle.asignado = buque;
+            muelle.estado = 0;
+            OutPosLista(muelles, &muelleaux, sizeof(tMuelle), poslibre);
+            InsPosLista(muelles, &muelle, sizeof(tMuelle), poslibre);
+        } else {
+            EnQueue(buquesEspera, &buque, sizeof(tBuque));
+        }
+    }
+
     return EXITO;
 }
 

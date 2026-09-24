@@ -52,15 +52,16 @@ int simulacion()
         fprintf (stderr, "ERROR: no se pudo generar el archivo de log temporales\n");
         return FALLO;
     }
-
+    system("pause");
+    system("cls");
+    printf("Bievenido a Operacion Contrarreloj!\n\n");
     while(sim.tiempo_actual<config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         EmbarcarBuquesVacios(&sim.muelles, &usuario);
-        AsignarBuques(&sim.buques_programados, &sim.muelles, sim.tiempo_actual);
+        AsignarBuques(&sim.buques_programados, &sim.muelles, &buquesEspera, sim.tiempo_actual);
         asignarCamiones(&sim, &camionesEspera);
-        RecorrerLista(&sim.muelles, MostrarMuelle, NULL);
-        printf("\n<Operador>");
+        printf("<Operador>");
         fgets(buffer_consola, sizeof(buffer_consola), stdin);
-        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &camionesEspera, &sim.tiempo_actual, config, &usuario, log);
+        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &buquesEspera, &camionesEspera, &sim.tiempo_actual, config, &usuario, log);
     }
     system ("cls");
     if(bloqueoOperativo(&sim, &camionesEspera))
