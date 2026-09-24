@@ -140,7 +140,7 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
 int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log){
     int pos_instr, param1, param2 ;
     char *aux;
-    char *instr_validas[]={"DES","REU","VER","ENT","ESP"};
+    char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS"};
     char c1, c2;
     aux=strchr(linea,' ');
     if(!aux)
@@ -216,6 +216,9 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             fprintf(log, "CODIGO:ESP\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\n", *tiempo, *tiempo+1);
             *tiempo+=1;
             printf("Se avanzo la jornada 1 minuto..\n\n");
+            break;
+        case 5://OPS
+            opsDisponibles();
             break;
     }
     return EXITO;

@@ -56,6 +56,7 @@ int simulacion()
     system("pause");
     system("cls");
     printf("Bievenido a Operacion Contrarreloj!\n\n");
+    puts ("Puede seleccionar el comando OPS para ver las operaciones disponibles");
     while(sim.tiempo_actual<config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         if(IsEmptyQueue(&camionesEspera) && todosMuellesVacios(&sim.muelles))
             avanzarRelojAuto(&sim);

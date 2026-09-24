@@ -148,3 +148,14 @@ int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario, FILE* log, int 
     return EXITO;
 
 }
+
+void opsDisponibles ()
+{
+    puts ("OPERACIONES DISPONIBLES:");
+    puts ("DES - Descargar y almacenar. Sintaxis: DES <muelle> <zona>");
+    puts ("REU - Reubicar. Sintaxis: REU <zona_origen> <zona_destino>");
+    puts ("ENT - Entregar contenedor al proximo camion. Sintaxis: ENT");
+    puts ("VER - Ver estado. Sintaxis: VER");
+    puts ("ESP - Esperar un minuto. Sintaxis: ESP");
+    puts ("AVZ - Esperar n minutos. Sintaxis: AVZ <minutos>");
+}
