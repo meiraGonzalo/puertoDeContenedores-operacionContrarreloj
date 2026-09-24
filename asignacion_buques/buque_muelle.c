@@ -69,3 +69,25 @@ void LiberarVacios(void *infoMuelle, void *usuario)
 void EmbarcarBuquesVacios(tLista *muelles, tOperador* usuario){
     RecorrerLista(muelles, LiberarVacios, usuario);
 }
+
+int asignarCamiones(tEstado* sis, tCola* camionesEspera)
+{
+    tCamion camion;
+
+    while(!IsEmptyQueue(&sis->camiones_programados))
+    {
+        ViewFirst(&sis->camiones_programados, &camion, sizeof(tCamion));
+        if (camion.tiempo <= sis->tiempo_actual)
+        {
+            if(!EnQueue(camionesEspera, &camion, sizeof(tCamion)))
+            {
+                fprintf(stderr, "ERROR: SIN MEMORIA PARA COLA DE ESPERA DE CAMIONES\n");
+                return FALLO;
+            }
+            DeQueue(&sis->camiones_programados, &camion, sizeof(tCamion));
+        }
+        else
+            break;
+    }
+    return EXITO;
+}

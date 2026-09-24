@@ -9,6 +9,14 @@ int simulacion()
     tCola camionesEspera;
     tCamion c;
     int camionesPendientes = 0;
+    FILE* log;
+
+    log = fopen("log.txt", "w+t");
+    if (!log)
+    {
+        fprintf (stderr, "ERROR: no se pudo generar el archivo de log temporales\n");
+        return FALLO;
+    }
 
     system("cls");
     if(!cargarConfiguracion(&config))
@@ -43,11 +51,13 @@ int simulacion()
     while(sim.tiempo_actual<=config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         EmbarcarBuquesVacios(&sim.muelles, &usuario);
         AsignarBuques(&sim.buques_programados, &sim.muelles, sim.tiempo_actual);
+        asignarCamiones(&sim, &camionesEspera);
         RecorrerLista(&sim.muelles, MostrarMuelle, NULL);
         printf("\n<Operador>");
         fgets(buffer_consola, sizeof(buffer_consola), stdin);
-        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &camionesEspera, &sim.tiempo_actual, config, &usuario);
+        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &camionesEspera, &sim.tiempo_actual, config, &usuario, log);
     }
+    system ("cls");
     if(bloqueoOperativo(&sim, &camionesEspera))
         printf ("Finaliza la jornada por no quedar acciones significativas por realizarse\n");
     else if (sim.tiempo_actual<=config.duracion_jornada)
@@ -59,7 +69,14 @@ int simulacion()
     usuario.camionesPend = camionesPendientes;
     usuario.puntuacion -= camionesPendientes*2;
     mostrarResumenUser(&config, &sim, &usuario);
+    system ("pause");
 
+    system("cls");
+    mostrarResumenMov(log);
+    system("pause");
+
+    fclose(log);
+    remove("log.txt");
     return EXITO;
 }
 
@@ -74,7 +91,7 @@ void estadoIniciar(tEstado* sistema)
 
 int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
 {
-    int bloqueo = EXITO, flag = 0;
+    int bloqueo = EXITO, todosVacios = 1;
 
     if (!IsEmptyQueue(&sis->buques_programados))
     {
@@ -88,8 +105,8 @@ int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
     {
         bloqueo = FALLO;
     }
-    RecorrerLista(&sis->muelles, muellesVacios, &flag);
-    if (flag)
+    RecorrerLista(&sis->muelles, muellesVacios, &todosVacios);
+    if (!todosVacios)
     {
         bloqueo = FALLO;
     }

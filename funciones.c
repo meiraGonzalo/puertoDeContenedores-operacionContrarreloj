@@ -127,7 +127,7 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
     return EXITO;
 }
 
-int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario){
+int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log){
     int pos_instr, param1, param2 ;
     char *aux;
     char *instr_validas[]={"DES","REU","VER","ENT","ESP"};
@@ -159,14 +159,14 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
     }
     switch(pos_instr){
         case 0: //DES
-            Descargar(muelles, zonas, param1, param2);
+            Descargar(muelles, zonas, param1, param2, log, tiempo, conf);
             *tiempo+=conf.tiempo_descarga;
             printf("T=%d\n",*tiempo);
             RecorrerLista(zonas, VerZona, NULL);
             printf("\n");
             break;
         case 1: //REU
-            if(!Reubicar(zonas, param1, param2, usuario))
+            if(!Reubicar(zonas, param1, param2, usuario, log, tiempo, conf))
                 fprintf(stderr,"ERROR: Verificar que la zona origen no este vacia y que la zona destino no este llena\n");
             else{
                 *tiempo+=conf.tiempo_reubicacion;
@@ -180,7 +180,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
             VerCamiones(camiones, VER_CAMIONES,*tiempo);
             break;
         case 3: //ENT
-            if(!Entregar(zonas,camiones, usuario))
+            if(!Entregar(zonas,camiones, usuario, log, tiempo, conf))
                 fprintf(stderr, "ERROR: El contenedor pedido no esta en el tope de la pila de una zona\n");
             else{
             *tiempo+=conf.tiempo_carga;
@@ -188,6 +188,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
             }
             break;
         case 4://ESP
+            fprintf(log, "CODIGO:ESP\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\n", *tiempo, *tiempo+1);
             *tiempo+=1;
             printf("T=%d\n", *tiempo);
 
@@ -200,5 +201,5 @@ void muellesVacios (void * a, void* flag)
 {
     tMuelle* m = (tMuelle*)a;
     int* f = (int*)flag;
-    if (m->estado != 0) *f = m->estado;
+    if (m->estado == 0) *f = m->estado;
 }

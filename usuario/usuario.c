@@ -34,6 +34,7 @@ int lineaValida (const char *linea)
 
 void mostrarResumenUser (const tConfig* config, const tEstado* sis, const tOperador* usuario)
 {
+    puts("");
     puts ("RESUMEN DE LA JORNADA");
     puts("");
     printf ("OPERADOR: %s\n", usuario->nombre);
@@ -45,4 +46,19 @@ void mostrarResumenUser (const tConfig* config, const tEstado* sis, const tOpera
     printf ("TIEMPO UTILIZADO: %d de %d\n", sis->tiempo_actual, config->duracion_jornada);
     puts("");
     printf ("PUNTUACION FINAL: %d\n", usuario->puntuacion);
+}
+
+int mostrarResumenMov (FILE* log)
+{
+    int i=0;
+    char linea[150];
+    fseek(log, 0, SEEK_SET);
+    puts("RESUMEN DE MOVIMIENTOS");
+    puts("");
+    while(fgets(linea, 150, log))
+    {
+        puts(linea);
+        i++;
+    }
+    return i;
 }
