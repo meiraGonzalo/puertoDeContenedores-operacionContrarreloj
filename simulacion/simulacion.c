@@ -25,8 +25,16 @@ int simulacion()
         fprintf(stderr,"ERROR: generacion de archivo puerto.txt no realizada");
         return FALLO;
     }
-    InicializarMuelles(&sim.muelles, config.cantidad_muelles);
-    InicializarZonas(&sim.zonas, config.cantidad_zonas, config.capacidad_pila);
+    if(!InicializarMuelles(&sim.muelles, config.cantidad_muelles))
+    {
+        fprintf(stderr,"ERROR: memoria insuficiente para crear lista de muelles\n");
+        return FALLO;
+    }
+    if(!InicializarZonas(&sim.zonas, config.cantidad_zonas, config.capacidad_pila))
+    {
+        fprintf(stderr,"ERROR: memoria insuficiente para crear lista de zonas de almacenamiento\n");
+        return FALLO;
+    }
 
     while(sim.tiempo_actual<=config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
         EmbarcarBuquesVacios(&sim.muelles);

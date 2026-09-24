@@ -1,10 +1,14 @@
 #include "buque_muelle.h"
+
 int InicializarMuelles(tLista *muelles, int cant_muelles){
     tMuelle muelle;
+    memset(&muelle, 0, sizeof(tMuelle)); //inicializamos en 0 toda la estructura muelle para evitar basura
     while(cant_muelles){
         muelle.nro=cant_muelles;
         muelle.estado=1; //al principio todos estan libres
-        if(!InsPrinLista(muelles, &muelle, sizeof(muelle))){
+        if(!InsPrinLista(muelles, &muelle, sizeof(muelle)))
+        {
+            VaciarLista(muelles);
             return ERROR_MALLOC;
         }
         cant_muelles--;

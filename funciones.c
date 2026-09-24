@@ -26,32 +26,52 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     fprintf(fpuerto,"MUELLES: %d\n", conf->cantidad_muelles);
     fprintf(fpuerto,"ZONAS: %d\n",conf->cantidad_zonas);
     fprintf(fpuerto,"CAPACIDAD_PILA: %d\n",conf->capacidad_pila);
+
     fprintf(fpuerto,"\n[BUQUES]\n");
     cant_buques=GenerarRandom(MIN_BUQUES, conf->cant_max_buques);
     i=0;
     while(i<cant_buques){
         if(i!=0) //el primero de los buques siempre llegara en t=0
             tiempo=GenerarRandom(tiempo, conf->duracion_jornada -FIN_LLEGADA); //asi se mantiene el orden de llegada en el archivo
-        fprintf(fpuerto,"B00%d;T=%d;C=",i+1,tiempo);
+        fprintf(fpuerto,"B%03d;T=%d;C=",i+1,tiempo);
         cant_contenedores=GenerarRandom(MIN_CONT_BUQUE,conf->cant_max_contenedores);
         j=0;
-        sprintf(buque.cod, "B00%d",i+1);
+        sprintf(buque.cod, "B%03d",i+1);
         buque.tiempo=tiempo;
         CreateQueue(&buque.contenedores);
         while(j<cant_contenedores){
-            fprintf(fpuerto,"C%d0%d",i+1,j+1);
+            fprintf(fpuerto,"C%d%02d",i+1,j+1);
             if(j<cant_contenedores-1)
                 fprintf(fpuerto,",");
-            sprintf(codcont,"C%d0%d", i+1,j+1);
-            EnQueue(&buque.contenedores, codcont, strlen(codcont)+1);
+            sprintf(codcont,"C%d%02d", i+1,j+1);
+            if(!EnQueue(&buque.contenedores, codcont, strlen(codcont)+1))
+            {
+                while (DeQueue(buques, &buque, sizeof(tBuque)))
+                {
+                    VaciarCola(&buque.contenedores);
+                }
+                VaciarLista(&lista);
+                fprintf(stderr, "ERROR: memoria insuficiente para crear cola de buques programados\n");
+                return ERROR_MALLOC;
+            }
             InsPrinLista(&lista,codcont, strlen(codcont)+1);
             total_contenedores++;
             j++;
         }
-        EnQueue(buques, &buque, sizeof(tBuque));
+        if(!EnQueue(buques, &buque, sizeof(tBuque)))
+        {
+            while (DeQueue(buques, &buque, sizeof(tBuque)))
+            {
+                VaciarCola(&buque.contenedores);
+            }
+            VaciarLista(&lista);
+            fprintf(stderr, "ERROR: memoria insuficiente para crear cola de buques programados\n");
+            return ERROR_MALLOC;
+        }
         fprintf(fpuerto, "\n");
         i++;
     }
+
     fprintf(fpuerto,"\n[CAMIONES]\n");
     i=0;
     tiempo=0;
@@ -66,7 +86,13 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
         sprintf(camion.codcamion,"K00%d",i+1);
         strcpy(camion.codcont, codcont);
         camion.tiempo=tiempo;
-        EnQueue(camiones, &camion, sizeof(tCamion));
+        if(!EnQueue(camiones, &camion, sizeof(tCamion)))
+        {
+            VaciarCola(camiones);
+            VaciarLista(&lista);
+            fprintf (stderr, "ERROR: memoria insuficiente para crear cola de camiones programados\n");
+            return ERROR_MALLOC;
+        }
         total_contenedores--;
         i++;
     }
@@ -92,7 +118,10 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
         zona.maxcont=cap_pila;
         CreateStack(&(zona.pilacont));
         if(!InsPrinLista(zonas, &zona, sizeof(tZona)))
+        {
+            VaciarLista(zonas);
             return ERROR_MALLOC;
+        }
         cant_zonas--;
     }
     return EXITO;
@@ -102,6 +131,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
     int pos_instr, param1, param2 ;
     char *aux;
     char *instr_validas[]={"DES","REU","VER","ENT","ESP"};
+    char c1, c2;
     aux=strchr(linea,' ');
     if(!aux)
         aux=strchr(linea,'\n');
@@ -115,14 +145,16 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola *camio
         if(!aux)
             return PARAM_INVALIDO;
         *aux=0;
-        sscanf(linea, "%d", &param1);
+        sscanf(linea, "%c%d", &c1, &param1);
+        c1 = toupper(c1);
         linea=aux+1;
         aux=strchr(linea, '\n');
         *aux=0;
-        sscanf(linea, "%d", &param2);
-        if(pos_instr==0 && (!ValidarRangoInt(param1,1,conf.cantidad_muelles) || !ValidarRangoInt(param2, 1,conf.cantidad_zonas)))
+        sscanf(linea, "%c%d",&c2, &param2);
+        c2 = toupper(c2);
+        if(pos_instr==0 && ((!ValidarRangoInt(param1,1,conf.cantidad_muelles) && c1 != 'M') || (!ValidarRangoInt(param2, 1,conf.cantidad_zonas) && c2 != 'Z')))
             return PARAM_INVALIDO;
-        if(pos_instr==1 && (!ValidarRangoInt(param1,1,conf.cantidad_zonas) || !ValidarRangoInt(param2, 1,conf.cantidad_zonas)))
+        if(pos_instr==1 && ((!ValidarRangoInt(param1,1,conf.cantidad_zonas) && c1 != 'Z') || (!ValidarRangoInt(param2, 1,conf.cantidad_zonas) && c2 != 'Z')))
             return PARAM_INVALIDO;
     }
     switch(pos_instr){

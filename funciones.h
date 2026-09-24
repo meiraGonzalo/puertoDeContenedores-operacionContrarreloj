@@ -7,7 +7,7 @@
 #include "bibliotecas/tdaColaDinamica/cola_dinamica.h"
 #include "bibliotecas/tdaListaDinamica/lista_dinamica.h"
 #include <time.h>
-
+#include "globales/globales.h"
 
 
 

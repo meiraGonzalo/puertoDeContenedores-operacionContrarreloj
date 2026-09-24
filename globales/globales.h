@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define FALLO 0
 #define EXITO 1
