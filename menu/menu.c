@@ -37,18 +37,22 @@ void seleccionarMenu(int* opcion)
 
 void dirigir(int opcion)
 {
+    char nombre[TAM_MAXIMO_NOMBRE_OP];
     switch(opcion)
     {
     case SIM:
-        simulacion(); //salto a simulacion
+        simulacion();
         break;
 
     case RANK:
-        //ranking(); salto a mostrar rankings
+        ranking();
         break;
 
     case HISTORIAL:
-        //mostrarHistorialOperador(); salto a mostrar historial por operador
+        puts("Ingrese el nombre del operador:");
+        fgets(nombre, TAM_MAXIMO_NOMBRE_OP, stdin);
+        nombre[strcspn(nombre, "\n")] = '\0';
+        mostrarHistorialOperador(nombre);
         break;
 
     case EXIT:

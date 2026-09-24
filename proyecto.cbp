@@ -36,6 +36,10 @@
 		</Unit>
 		<Unit filename="asignacion_buques/buque_muelle.h" />
 		<Unit filename="bibliotecas/nodo/nodo.h" />
+		<Unit filename="bibliotecas/tdaArbol/tdaArbol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaArbol/tdaArbol.h" />
 		<Unit filename="bibliotecas/tdaColaDinamica/cola_dinamica.c">
 			<Option compilerVar="CC" />
 		</Unit>

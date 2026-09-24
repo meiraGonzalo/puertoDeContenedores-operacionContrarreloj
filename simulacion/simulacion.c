@@ -1,4 +1,5 @@
 #include "simulacion.h"
+#include "../usuario/usuario.h"
 
 int simulacion()
 {
@@ -8,7 +9,7 @@ int simulacion()
     tCola buquesEspera;
     tCola camionesEspera;
     tCamion c;
-    int camionesPendientes = 0;
+    int camionesPendientes = 0, cantMov;
     FILE* log;
 
     system("cls");
@@ -77,12 +78,13 @@ int simulacion()
     usuario.camionesPend = camionesPendientes;
     usuario.puntuacion -= camionesPendientes*2;
     mostrarResumenUser(&config, &sim, &usuario);
+    actualizarRegUsuario(&usuario);
     system ("pause");
 
     system("cls");
-    mostrarResumenMov(log);
+    cantMov=mostrarResumenMov(log);
     system("pause");
-
+    archivarJornada(log, &usuario, cantMov);
     fclose(log);
     remove("log.txt");
     return EXITO;
@@ -124,10 +126,27 @@ void avanzarRelojAuto (tEstado* sim)
 {
     tBuque b;
     tCamion c;
-    int minutos;
-    if (!ViewFirst(&sim->buques_programados, &b, sizeof(tBuque))) b.tiempo = sim->tiempo_actual;
-    if (!ViewFirst(&sim->camiones_programados, &c, sizeof(tCamion))) c.tiempo = sim->tiempo_actual;
-    minutos = (b.tiempo-sim->tiempo_actual) <= (c.tiempo - sim->tiempo_actual) ? (b.tiempo-sim->tiempo_actual) : (c.tiempo - sim->tiempo_actual);
-    sim->tiempo_actual += minutos;
-    printf ("Se avanzo automaticamente %d minuto/s\n", minutos);
+    int min_buque = -1;
+    int min_camion = -1;
+    int minutos = 0;
+
+    if (ViewFirst(&sim->buques_programados, &b, sizeof(tBuque)) == EXITO) {
+        min_buque = b.tiempo - sim->tiempo_actual;
+    }
+    if (ViewFirst(&sim->camiones_programados, &c, sizeof(tCamion)) == EXITO) {
+        min_camion = c.tiempo - sim->tiempo_actual;
+    }
+
+    if (min_buque >= 0 && min_camion >= 0) {
+        minutos = (min_buque <= min_camion) ? min_buque : min_camion;
+    } else if (min_buque >= 0) {
+        minutos = min_buque;
+    } else if (min_camion >= 0) {
+        minutos = min_camion;
+    }
+
+    if (minutos > 0) {
+        sim->tiempo_actual += minutos;
+        printf("Se avanzo automaticamente %d minuto/s\n", minutos);
+    }
 }

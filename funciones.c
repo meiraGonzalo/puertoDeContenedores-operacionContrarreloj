@@ -169,10 +169,12 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
     }
     switch(pos_instr){
         case 0: //DES
-            Descargar(muelles, zonas, param1, param2, log, tiempo, conf);
-            *tiempo+=conf.tiempo_descarga;
-            printf("T=%d\n",*tiempo);
-            printf("\n");
+            if(!Descargar(muelles, zonas, param1, param2, log, tiempo, conf))
+            {
+                fprintf(stderr,"ERROR: No se pudo realizar la descarga\n");
+                return FALLO;
+            }
+            else *tiempo+=conf.tiempo_descarga;
             break;
         case 1: //REU
             if(!Reubicar(zonas, param1, param2, usuario, log, tiempo, conf)){

@@ -27,6 +27,7 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
     PushStack(&(zona.pilacont), codcont, strlen(codcont)+1); //ponemos el contenedor en la pila de la zona
     zona.cantcont++;
     InsPosLista(zonas, &zona, sizeof(tZona),poszona);
+    printf ("\nSe descargo el contenedor correctamente desde el muelle [M%d] a la zona de almacenamiento [Z%d]\n", muelle.nro, zona.nrozona);
     fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, muelle.nro, zona.nrozona);
     return EXITO;
 }
@@ -102,6 +103,7 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario,
     InsPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
     usuario->cantReubicar++;
     fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:Z%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_reubicacion, zona_ori.nrozona, zona_dest.nrozona);
+    printf ("\nSe reubico con exito desde la zona [Z%d] a la zona [Z%d]", zona_ori.nrozona, zona_dest.nrozona);
     *tiempo += conf.tiempo_reubicacion;
     return EXITO;
 }
