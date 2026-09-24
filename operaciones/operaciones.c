@@ -1,11 +1,18 @@
 #include "operaciones.h"
 
-int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona){
+int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE* log, int *tiempo, tConfig conf){
     int posmuelle=nro_muelle-1,poszona=nro_zona-1;
     char codcont[TAM_COD];
     tZona zona;
     tMuelle muelle;
     tBuque buque;
+
+    if(*tiempo+conf.tiempo_descarga > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     //verificamos que haya espacio en la zona
     OutPosLista(zonas, &zona, sizeof(tZona), poszona);
     if(zona.cantcont>=zona.maxcont)
@@ -20,8 +27,11 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona){
     PushStack(&(zona.pilacont), codcont, strlen(codcont)+1); //ponemos el contenedor en la pila de la zona
     zona.cantcont++;
     InsPosLista(zonas, &zona, sizeof(tZona),poszona);
+    printf ("\nSe descargo el contenedor correctamente desde el muelle [M%d] a la zona de almacenamiento [Z%d]\n", muelle.nro, zona.nrozona);
+    fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, muelle.nro, zona.nrozona);
     return EXITO;
 }
+
 void VerZona(void *info, void *sin_usar){ //hace falta crear una nueva pila y mover todos los elementos ahi para luego volver a poner todos los elementos devuelta en la original
     char codcont[TAM_COD];
     tPila pilaAux;
@@ -41,7 +51,6 @@ void VerZona(void *info, void *sin_usar){ //hace falta crear una nueva pila y mo
 
     printf("]\t");
 }
-
 
 void VerCamiones(tCola *camiones, int cant, int tiempo_actual){//hace falta crear una nueva cola y mover todos lo elementos ahi para luefo restaurar la original
     tCamion camion;
@@ -66,10 +75,17 @@ void VerCamiones(tCola *camiones, int cant, int tiempo_actual){//hace falta crea
         EnQueue(camiones, &camion, sizeof(tCamion));
 }
 
-int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
+int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario, FILE* log, int *tiempo, tConfig conf){
     char codcont[TAM_COD];
     int pos_origen=nro_origen-1, pos_destino=nro_destino-1;
     tZona zona_ori, zona_dest;
+
+    if(*tiempo+conf.tiempo_reubicacion > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     //verificamos que la zona destino no este llena
     OutPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
     if(zona_dest.cantcont>=zona_dest.maxcont)
@@ -85,6 +101,10 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino){
     PushStack(&(zona_dest.pilacont),codcont,strlen(codcont)+1);
     zona_dest.cantcont++;
     InsPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
+    usuario->cantReubicar++;
+    fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:Z%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_reubicacion, zona_ori.nrozona, zona_dest.nrozona);
+    printf ("\nSe reubico con exito desde la zona [Z%d] a la zona [Z%d]", zona_ori.nrozona, zona_dest.nrozona);
+    *tiempo += conf.tiempo_reubicacion;
     return EXITO;
 }
 
@@ -99,11 +119,18 @@ int CmpContTope(void *info_zona, void *info_codcont){
     return strcmpi(conttope, codcont);
 }
 
-int Entregar(tLista *zonas, tCola *camiones){
+int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario, FILE* log, int *tiempo, tConfig conf){
     int pos_zona;
     char codcont[TAM_COD];
     tCamion camion;
     tZona zona;
+
+    if(*tiempo+conf.tiempo_carga > conf.duracion_jornada)
+    {
+        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        return FALLO;
+    }
+
     if(!ViewFirst(camiones, &camion, sizeof(camion)))
         return COLA_VACIA;
     pos_zona=BuscLista(zonas, camion.codcont, CmpContTope);
@@ -114,6 +141,21 @@ int Entregar(tLista *zonas, tCola *camiones){
     PopStack(&(zona.pilacont), codcont, sizeof(codcont));
     InsPosLista(zonas, &zona, sizeof(tZona),pos_zona);
     printf("\ncontenedor %s entregado al camion %s\n", codcont, camion.codcamion);
+    usuario->puntuacion += 10;
+    usuario->contenEntregados++;
+    fprintf (log, "CODIGO:ENT\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:%s\tDestino:%s\n", *tiempo,*tiempo+conf.tiempo_carga, camion.codcont, camion.codcamion);
+    *tiempo += conf.tiempo_carga;
     return EXITO;
 
+}
+
+void opsDisponibles ()
+{
+    puts ("OPERACIONES DISPONIBLES:");
+    puts ("DES - Descargar y almacenar. Sintaxis: DES <muelle> <zona>");
+    puts ("REU - Reubicar. Sintaxis: REU <zona_origen> <zona_destino>");
+    puts ("ENT - Entregar contenedor al proximo camion. Sintaxis: ENT");
+    puts ("VER - Ver estado. Sintaxis: VER");
+    puts ("ESP - Esperar un minuto. Sintaxis: ESP");
+    puts ("AVZ - Esperar n minutos. Sintaxis: AVZ <minutos>");
 }

@@ -19,4 +19,5 @@ int EnQueue(tCola *pCola, void *info, size_t taminfo);
 int DeQueue(tCola *pCola, void *info, size_t taminfo);
 int ViewFirst(tCola *pCola, void *info, size_t taminfo);
 int IsEmptyQueue(tCola *pCola);
+void VaciarCola(tCola *pCola);
 #endif // COLA_H_INCLUDED

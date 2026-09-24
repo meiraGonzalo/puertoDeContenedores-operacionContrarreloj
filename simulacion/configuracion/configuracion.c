@@ -70,7 +70,7 @@ int cargarConfiguracion (tConfig* config)
 
     while (fgets(linea, TAM_LINEA_MAX, arch))
     {
-        if (sscanf(linea, "%99[^:]: %d\n", clave, &valor) == 2)
+        if (sscanf(linea, "%99[^:]: %d", clave, &valor) == 2)
         {
             for (i=0; i<cant; i++)
             {
