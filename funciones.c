@@ -140,27 +140,40 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
 int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log){
     int pos_instr, param1, param2 ;
     char *aux;
-    char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS"};
+    char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS", NULL};
     char c1, c2;
     aux=strchr(linea,' ');
     if(!aux)
         aux=strchr(linea,'\n');
-    *aux=0;
+    if(aux) {
+        *aux = 0;
+    }
     pos_instr=BuscarParametro(linea, instr_validas);
     if(pos_instr==-1)
         return INSTR_INVALIDA;
+    if (strlen(linea) == 0) {
+        return INSTR_INVALIDA;
+    }
     if(pos_instr==0 || pos_instr==1){//buscamos los parametro si es DES o REU
+        if(!aux)
+            return PARAM_INVALIDO;
         linea=aux+1;
         aux=strchr(linea, ' ');
         if(!aux)
             return PARAM_INVALIDO;
-        *aux=0;
-        sscanf(linea, "%c%d", &c1, &param1);
+        *aux = 0;
+        if (sscanf(linea, "%c%d", &c1, &param1) != 2) {
+            return PARAM_INVALIDO;
+        }
         c1 = toupper(c1);
         linea=aux+1;
         aux=strchr(linea, '\n');
-        *aux=0;
-        sscanf(linea, "%c%d",&c2, &param2);
+        if(aux) {
+            *aux = 0;
+        }
+        if (sscanf(linea, "%c%d", &c2, &param2) != 2) {
+            return PARAM_INVALIDO;
+        }
         c2 = toupper(c2);
         if(pos_instr==0 && ((!ValidarRangoInt(param1,1,conf.cantidad_muelles) && c1 != 'M') || (!ValidarRangoInt(param2, 1,conf.cantidad_zonas) && c2 != 'Z')))
             return PARAM_INVALIDO;
@@ -219,6 +232,9 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             break;
         case 5://OPS
             opsDisponibles();
+            break;
+        default:
+            printf ("Operacion no reconocida\n");
             break;
     }
     return EXITO;
