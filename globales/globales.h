@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define FALLO 0
 #define EXITO 1
@@ -21,14 +22,17 @@
 #define TAM_CONSOLA 30 //el maximo de caracteres que seran captados cuando el usuario escriba algo por consola
 #define VER_CAMIONES 3
 #define NO_ENCONTRADO 0
-#define MIN_CAMIONES 6
-#define MIN_BUQUES 6
-#define MIN_CONT_BUQUE 2
+#define MIN_CAMIONES 1
+#define MIN_BUQUES 1
+#define MIN_CONT_BUQUE 1
+#define TAM_MAXIMO_NOMBRE_OP 51
 
 
 #include "../bibliotecas/tdaColaDinamica/cola_dinamica.h"
 #include "../bibliotecas/tdaListaDinamica/lista_dinamica.h"
 #include "../bibliotecas/tdaPilaDinamica/pila_dinamica.h"
+#include "../bibliotecas/tdaArbol/tdaArbol.h"
+
 typedef struct{
     char cod[TAM_COD];
     int tiempo;
@@ -67,5 +71,25 @@ typedef struct
     int tiempo_reubicacion;
     int tiempo_carga;
 } tConfig;
+
+typedef struct
+{
+    int tiempo_actual;
+    tCola buques_programados;
+    tCola camiones_programados;
+    tLista muelles;
+    tLista zonas;
+} tEstado;
+
+typedef struct
+{
+    char nombre[TAM_MAXIMO_NOMBRE_OP];
+    int puntuacion;
+    int contenEntregados;
+    int buquesDescargados;
+    int camionesPend;
+    int cantReubicar;
+    int jornadas;
+} tOperador;
 
 #endif // GLOBALES_H_INCLUDED

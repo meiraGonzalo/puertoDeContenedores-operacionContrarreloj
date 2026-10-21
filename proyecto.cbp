@@ -36,6 +36,10 @@
 		</Unit>
 		<Unit filename="asignacion_buques/buque_muelle.h" />
 		<Unit filename="bibliotecas/nodo/nodo.h" />
+		<Unit filename="bibliotecas/tdaArbol/tdaArbol.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="bibliotecas/tdaArbol/tdaArbol.h" />
 		<Unit filename="bibliotecas/tdaColaDinamica/cola_dinamica.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -80,6 +84,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="simulacion/simulacion.h" />
+		<Unit filename="usuario/usuario.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="usuario/usuario.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

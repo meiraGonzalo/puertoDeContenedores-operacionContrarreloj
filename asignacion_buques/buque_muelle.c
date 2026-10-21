@@ -1,10 +1,14 @@
 #include "buque_muelle.h"
+
 int InicializarMuelles(tLista *muelles, int cant_muelles){
     tMuelle muelle;
+    memset(&muelle, 0, sizeof(tMuelle)); //inicializamos en 0 toda la estructura muelle para evitar basura
     while(cant_muelles){
         muelle.nro=cant_muelles;
         muelle.estado=1; //al principio todos estan libres
-        if(!InsPrinLista(muelles, &muelle, sizeof(muelle))){
+        if(!InsPrinLista(muelles, &muelle, sizeof(muelle)))
+        {
+            VaciarLista(muelles);
             return ERROR_MALLOC;
         }
         cant_muelles--;
@@ -19,25 +23,43 @@ int CmpEstado(void *a, void *b){ // compara estados entre muelles
         return 0;
     return -1;
 }
-int AsignarBuques(tCola *buques, tLista *muelles, int tiempo){
-    int poslibre=0, hay_encolados;
+int AsignarBuques(tCola *buquesProgramados, tLista *muelles, tCola* buquesEspera, int tiempo)
+{
+    int poslibre;
     tBuque buque;
-    tMuelle muelle,muelle_libre, muelleaux;
-    muelle_libre.estado=1;
-    if(!(hay_encolados=ViewFirst(buques, &buque, sizeof(tBuque)))){
-        return COLA_VACIA;
-    }
-    while(buque.tiempo<=tiempo && poslibre!=-1 && hay_encolados){
-        if((poslibre=BuscLista(muelles, &muelle_libre, CmpEstado))!=-1){ //encontrara el primer muelle libre
-            DeQueue(buques, &buque,sizeof(tBuque));
-            muelle.nro=poslibre+1;
-            muelle.asignado=buque;
-            muelle.estado=0;
-            OutPosLista(muelles, &muelleaux, sizeof(tMuelle),poslibre); //quitamos el nodo que estaba en pos
-            InsPosLista(muelles, &muelle, sizeof(tMuelle),poslibre);// insertamos el nuevo nodo con los datos del muelle
+    tMuelle muelle, muelle_libre, muelleaux;
+    muelle_libre.estado = 1;
+
+    while (ViewFirst(buquesEspera, &buque, sizeof(tBuque))) { //primero revisalos si hay buques ya arribados en espera
+        poslibre = BuscLista(muelles, &muelle_libre, CmpEstado);
+        if (poslibre != POS_INVALIDA) {
+            DeQueue(buquesEspera, &buque, sizeof(tBuque));
+            muelle.nro = poslibre + 1;
+            muelle.asignado = buque;
+            muelle.estado = 0;
+            OutPosLista(muelles, &muelleaux, sizeof(tMuelle), poslibre);
+            InsPosLista(muelles, &muelle, sizeof(tMuelle), poslibre);
+        } else {
+            break;
         }
-        hay_encolados=ViewFirst(buques, &buque, sizeof(tBuque));
     }
+
+    while (ViewFirst(buquesProgramados, &buque, sizeof(tBuque)) && buque.tiempo <= tiempo) { //continuamos con los buques que estan arribando
+        DeQueue(buquesProgramados, &buque, sizeof(tBuque));
+
+        poslibre = BuscLista(muelles, &muelle_libre, CmpEstado);
+
+        if (poslibre != POS_INVALIDA) {
+            muelle.nro = poslibre + 1;
+            muelle.asignado = buque;
+            muelle.estado = 0;
+            OutPosLista(muelles, &muelleaux, sizeof(tMuelle), poslibre);
+            InsPosLista(muelles, &muelle, sizeof(tMuelle), poslibre);
+        } else {
+            EnQueue(buquesEspera, &buque, sizeof(tBuque));
+        }
+    }
+
     return EXITO;
 }
 
@@ -51,11 +73,39 @@ void MostrarMuelle(void *info, void *sin_usar){
     }
 }
 
-void LiberarVacios(void *infoMuelle, void *sinUsar){
+void LiberarVacios(void *infoMuelle, void *usuario)
+{
     tMuelle *muelle=(tMuelle*)infoMuelle;
+    tOperador* user = (tOperador*)usuario;
     if(muelle->estado==0 && IsEmptyQueue(&((muelle->asignado).contenedores)))
+    {
         muelle->estado=1;
+        user->buquesDescargados++;
+        user->puntuacion +=5;
+    }
 }
-void EmbarcarBuquesVacios(tLista *muelles){
-    RecorrerLista(muelles, LiberarVacios, NULL);
+void EmbarcarBuquesVacios(tLista *muelles, tOperador* usuario){
+    RecorrerLista(muelles, LiberarVacios, usuario);
+}
+
+int asignarCamiones(tEstado* sis, tCola* camionesEspera)
+{
+    tCamion camion;
+
+    while(!IsEmptyQueue(&sis->camiones_programados))
+    {
+        ViewFirst(&sis->camiones_programados, &camion, sizeof(tCamion));
+        if (camion.tiempo <= sis->tiempo_actual)
+        {
+            if(!EnQueue(camionesEspera, &camion, sizeof(tCamion)))
+            {
+                fprintf(stderr, "ERROR: SIN MEMORIA PARA COLA DE ESPERA DE CAMIONES\n");
+                return FALLO;
+            }
+            DeQueue(&sis->camiones_programados, &camion, sizeof(tCamion));
+        }
+        else
+            break;
+    }
+    return EXITO;
 }

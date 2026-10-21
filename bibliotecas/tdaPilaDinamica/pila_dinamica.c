@@ -46,3 +46,13 @@ int PeekStack(tPila *pila, void *info, size_t taminfo){
     return 1;
 }
 
+void VaciarPila(tPila *pila){
+    tNodo *aux;
+
+    while(*pila){
+        aux = *pila;
+        *pila = aux->sig;
+        free(aux->info);
+        free(aux);
+    }
+}

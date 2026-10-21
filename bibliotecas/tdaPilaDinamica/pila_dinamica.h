@@ -16,4 +16,5 @@ int PushStack(tPila *pila, void *info, size_t taminfo);
 int PopStack(tPila *pila, void *info, size_t taminfo);
 int PeekStack(tPila *pila, void *info, size_t taminfo);
 int IsEmptyStack(tPila *pila);
+void VaciarPila(tPila *pila);
 #endif // PILAD_H_INCLUDED
