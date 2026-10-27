@@ -84,6 +84,18 @@ int VerPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos){
     memcpy(info, (*pLista)->info, taminfo);
     return EXITO;
 }
+
+void *PtrPosLista(tLista *pLista, size_t pos){
+    while(*pLista && pos){
+        pLista=&(*pLista)->sig;
+        pos--;
+    }
+    if(pos)
+        return NULL;
+    else{
+        return (*pLista)->info;
+    }
+}
 void RecorrerLista(tLista *pLista, void accion(void*, void*), void *param){
     while(*pLista){
         accion((*pLista)->info, param);

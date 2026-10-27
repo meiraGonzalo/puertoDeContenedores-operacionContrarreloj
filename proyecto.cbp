@@ -44,9 +44,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="bibliotecas/tdaColaDinamica/cola_dinamica.h" />
-		<Unit filename="bibliotecas/tdaColaEstatica/tdaCola.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="bibliotecas/tdaColaEstatica/tdaCola.h" />
 		<Unit filename="bibliotecas/tdaListaDinamica/lista_dinamica.c">
 			<Option compilerVar="CC" />
@@ -56,9 +53,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="bibliotecas/tdaPilaDinamica/pila_dinamica.h" />
-		<Unit filename="bibliotecas/tdaPilaEstatica/tdaPila.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="bibliotecas/tdaPilaEstatica/tdaPila.h" />
 		<Unit filename="funciones.c">
 			<Option compilerVar="CC" />

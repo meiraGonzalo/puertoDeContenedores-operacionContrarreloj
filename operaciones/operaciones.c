@@ -1,11 +1,9 @@
 #include "operaciones.h"
 
 int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE* log, int *tiempo, tConfig conf){
-    int posmuelle=nro_muelle-1,poszona=nro_zona-1;
     char codcont[TAM_COD];
-    tZona zona;
-    tMuelle muelle;
-    tBuque buque;
+    tZona *zona;
+    tMuelle *muelle;
 
     if(*tiempo+conf.tiempo_descarga > conf.duracion_jornada)
     {
@@ -13,22 +11,39 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
         return FALLO;
     }
 
-    //verificamos que haya espacio en la zona
-    OutPosLista(zonas, &zona, sizeof(tZona), poszona);
-    if(zona.cantcont>=zona.maxcont)
-        return PILA_LLENA;
-    //sacamos el contenedor del buque
-    OutPosLista(muelles,&muelle, sizeof(tMuelle),posmuelle);
-    buque=muelle.asignado;
-    DeQueue(&(buque.contenedores), codcont, sizeof(codcont)); //quitamos el contenedor del buque
-    muelle.asignado=buque;
-    InsPosLista(muelles, &muelle, sizeof(tMuelle), posmuelle);
-    //ingresamos el contenedor
-    PushStack(&(zona.pilacont), codcont, strlen(codcont)+1); //ponemos el contenedor en la pila de la zona
-    zona.cantcont++;
-    InsPosLista(zonas, &zona, sizeof(tZona),poszona);
-    printf ("\nSe descargo el contenedor correctamente desde el muelle [M%d] a la zona de almacenamiento [Z%d]\n", muelle.nro, zona.nrozona);
-    fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, muelle.nro, zona.nrozona);
+    //validaciones del muelle
+    muelle=(tMuelle*)PtrPosLista(muelles, nro_muelle-1);
+    if(muelle==NULL){
+        fprintf(stderr, "El Muelle M%d no existe",nro_muelle);
+        return FALLO;
+    }
+    if(muelle->estado!=0){
+        fprintf(stderr,"ERROR: El Muelle M%d no tiene ningun buque atracado", nro_muelle);
+        return FALLO;
+    }
+    if(!ViewFirst(&(muelle->asignado.contenedores), codcont, sizeof(codcont))){
+        fprintf(stderr, "ERROR: El buque asignado al muelle M%d esta vacío", nro_muelle);
+        return FALLO;
+    }
+    zona=(tZona*)PtrPosLista(zonas, nro_zona-1);
+    if(!zona){
+        fprintf(stderr,"ERROR: La zona Z%d no existe", nro_zona);
+        return FALLO;
+    }
+    if(zona->cantcont>=zona->maxcont){
+        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible", nro_zona);
+        return FALLO;
+    }
+    //primero apilamos: si falla la memoria no se modifico nada
+    if(!PushStack(&(zona->pilacont), codcont, strlen(codcont)+1)){
+        fprintf(stderr, "ERROR: memoria insuficiente para almacenar el contenedor");
+        return ERROR_MALLOC;
+    }
+    DeQueue(&(muelle->asignado.contenedores), codcont, sizeof(codcont));
+    zona->cantcont++;
+
+    printf("\nSe descargo el contenedor %s desde el muelle [M%d] a la zona de almacenamiento [Z%d]\n", codcont, muelle->nro, zona->nrozona);
+    fprintf(log, "CODIGO:DES\tTiempo de Inicio:%02d\t Tiempo de Fin:%02d\tContenedor:%s,\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, codcont,muelle->nro, zona->nrozona);
     return EXITO;
 }
 
@@ -77,8 +92,7 @@ void VerCamiones(tCola *camiones, int cant, int tiempo_actual){//hace falta crea
 
 int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario, FILE* log, int *tiempo, tConfig conf){
     char codcont[TAM_COD];
-    int pos_origen=nro_origen-1, pos_destino=nro_destino-1;
-    tZona zona_ori, zona_dest;
+    tZona *zona_ori, *zona_dest;
 
     if(*tiempo+conf.tiempo_reubicacion > conf.duracion_jornada)
     {
@@ -86,25 +100,36 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario,
         return FALLO;
     }
 
-    //verificamos que la zona destino no este llena
-    OutPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
-    if(zona_dest.cantcont>=zona_dest.maxcont)
-        return PILA_LLENA;
-    //quitamos el contenedor de la zona origen
-    OutPosLista(zonas, &zona_ori,sizeof(tZona), pos_origen);
-    if(zona_ori.cantcont==0)
-        return PILA_VACIA;
-    PopStack(&(zona_ori.pilacont), codcont, sizeof(codcont));
-    zona_ori.cantcont--;
-    InsPosLista(zonas, &zona_ori,sizeof(tZona), pos_origen);
-    // lo ponemos en la zona destino
-    PushStack(&(zona_dest.pilacont),codcont,strlen(codcont)+1);
-    zona_dest.cantcont++;
-    InsPosLista(zonas, &zona_dest, sizeof(tZona), pos_destino);
+    if(nro_origen==nro_destino){
+        fprintf(stderr,"ERROR: La zona origen y destino deben ser distintas\n");
+        return FALLO;
+    }
+    zona_ori=(tZona*)PtrPosLista(zonas, nro_origen-1);
+    zona_dest=(tZona*)PtrPosLista(zonas, nro_destino-1);
+    if(!zona_ori || !zona_dest){
+        fprintf(stderr, "ERROR: La zona Z%d no existe", (!zona_ori)?nro_origen:nro_destino);
+        return FALLO;
+    }
+    if(zona_ori->cantcont==0){
+        fprintf(stderr, "ERROR: La zona Z%d se encuentra vacia", nro_origen);
+        return FALLO;
+    }
+    if(zona_dest->cantcont==zona_dest->maxcont){
+        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible", nro_destino);
+        return FALLO;
+    }
+    PeekStack(&(zona_ori->pilacont), codcont, sizeof(codcont));
+    if(!PushStack(&(zona_dest->pilacont), codcont, strlen(codcont)+1)){
+        fprintf(stderr, "ERROR: Memoria Insuficiente para reubicar el contenedor");
+        return ERROR_MALLOC;
+    }
+    PopStack(&(zona_ori->pilacont), codcont, sizeof(codcont));
+    zona_ori->cantcont--;
+    zona_dest->cantcont++;
     usuario->cantReubicar++;
-    fprintf (log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:Z%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_reubicacion, zona_ori.nrozona, zona_dest.nrozona);
-    printf ("\nSe reubico con exito desde la zona [Z%d] a la zona [Z%d]", zona_ori.nrozona, zona_dest.nrozona);
-    *tiempo += conf.tiempo_reubicacion;
+
+    fprintf(log, "CODIGO:REU\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tContenedor:%s\tOrigen:Z%d\tDestino:Z%d\n",*tiempo, *tiempo+conf.tiempo_reubicacion, codcont, zona_ori->nrozona, zona_dest->nrozona);
+    printf("\nSe reubico el contenedor %s desde la zona [Z%d] a la zona [Z%d]\n", codcont, zona_ori->nrozona, zona_dest->nrozona);
     return EXITO;
 }
 
@@ -119,34 +144,39 @@ int CmpContTope(void *info_zona, void *info_codcont){
     return strcmpi(conttope, codcont);
 }
 
-int Entregar(tLista *zonas, tCola *camiones, tOperador* usuario, FILE* log, int *tiempo, tConfig conf){
+int Entregar(tLista *zonas, tCola *camiones, tOperador *usuario, FILE* log, int *tiempo, tConfig conf){
     int pos_zona;
     char codcont[TAM_COD];
     tCamion camion;
-    tZona zona;
+    tZona *zona;
 
+    //el tiempo lo avanza quien invoca la operacion (ProcesarInstruccion) una vez que retorna EXITO
     if(*tiempo+conf.tiempo_carga > conf.duracion_jornada)
     {
-        fprintf (stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
+        fprintf(stderr, "ERROR: No queda tiempo suficiente para ejecutar la operacion\n");
         return FALLO;
     }
-
-    if(!ViewFirst(camiones, &camion, sizeof(camion)))
-        return COLA_VACIA;
+    if(!ViewFirst(camiones, &camion, sizeof(tCamion)))
+    {
+        fprintf(stderr, "ERROR: No hay camiones esperando atencion\n");
+        return FALLO;
+    }
     pos_zona=BuscLista(zonas, camion.codcont, CmpContTope);
-    if(pos_zona==-1)
-        return NO_ENCONTRADO;
+    if(pos_zona==POS_INVALIDA)
+    {
+        fprintf(stderr, "ERROR: El contenedor %s solicitado por %s no esta en el tope de ninguna zona\n", camion.codcont, camion.codcamion);
+        return FALLO;
+    }
+    zona=(tZona*)PtrPosLista(zonas, pos_zona);
+    PopStack(&(zona->pilacont), codcont, sizeof(codcont));
+    zona->cantcont--;
     DeQueue(camiones, &camion, sizeof(tCamion));
-    OutPosLista(zonas, &zona, sizeof(tZona),pos_zona);
-    PopStack(&(zona.pilacont), codcont, sizeof(codcont));
-    InsPosLista(zonas, &zona, sizeof(tZona),pos_zona);
-    printf("\ncontenedor %s entregado al camion %s\n", codcont, camion.codcamion);
     usuario->puntuacion += 10;
     usuario->contenEntregados++;
-    fprintf (log, "CODIGO:ENT\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tOrigen:%s\tDestino:%s\n", *tiempo,*tiempo+conf.tiempo_carga, camion.codcont, camion.codcamion);
-    *tiempo += conf.tiempo_carga;
-    return EXITO;
 
+    printf("\nContenedor %s entregado al camion %s desde la zona [Z%d]\n", codcont, camion.codcamion, zona->nrozona);
+    fprintf(log, "CODIGO:ENT\tTiempo de Inicio:%02d\tTiempo de Fin:%02d\tContenedor:%s\tOrigen:Z%d\tDestino:%s\n", *tiempo, *tiempo+conf.tiempo_carga, codcont, zona->nrozona, camion.codcamion);
+    return EXITO;
 }
 
 void opsDisponibles ()
