@@ -14,15 +14,15 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
     //validaciones del muelle
     muelle=(tMuelle*)PtrPosLista(muelles, nro_muelle-1);
     if(muelle==NULL){
-        fprintf(stderr, "El Muelle M%d no existe",nro_muelle);
+        fprintf(stderr, "El Muelle M%d no existe\n",nro_muelle);
         return FALLO;
     }
     if(muelle->estado!=0){
-        fprintf(stderr,"ERROR: El Muelle M%d no tiene ningun buque atracado", nro_muelle);
+        fprintf(stderr,"ERROR: El Muelle M%d no tiene ningun buque atracado\n", nro_muelle);
         return FALLO;
     }
     if(!ViewFirst(&(muelle->asignado.contenedores), codcont, sizeof(codcont))){
-        fprintf(stderr, "ERROR: El buque asignado al muelle M%d esta vacío", nro_muelle);
+        fprintf(stderr, "ERROR: El buque asignado al muelle M%d esta vacío\n", nro_muelle);
         return FALLO;
     }
     zona=(tZona*)PtrPosLista(zonas, nro_zona-1);
@@ -31,12 +31,12 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
         return FALLO;
     }
     if(zona->cantcont>=zona->maxcont){
-        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible", nro_zona);
+        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible\n", nro_zona);
         return FALLO;
     }
     //primero apilamos: si falla la memoria no se modifico nada
     if(!PushStack(&(zona->pilacont), codcont, strlen(codcont)+1)){
-        fprintf(stderr, "ERROR: memoria insuficiente para almacenar el contenedor");
+        fprintf(stderr, "ERROR: memoria insuficiente para almacenar el contenedor\n");
         return ERROR_MALLOC;
     }
     DeQueue(&(muelle->asignado.contenedores), codcont, sizeof(codcont));
@@ -107,20 +107,20 @@ int Reubicar(tLista *zonas, int nro_origen, int nro_destino, tOperador* usuario,
     zona_ori=(tZona*)PtrPosLista(zonas, nro_origen-1);
     zona_dest=(tZona*)PtrPosLista(zonas, nro_destino-1);
     if(!zona_ori || !zona_dest){
-        fprintf(stderr, "ERROR: La zona Z%d no existe", (!zona_ori)?nro_origen:nro_destino);
+        fprintf(stderr, "ERROR: La zona Z%d no existe\n", (!zona_ori)?nro_origen:nro_destino);
         return FALLO;
     }
     if(zona_ori->cantcont==0){
-        fprintf(stderr, "ERROR: La zona Z%d se encuentra vacia", nro_origen);
+        fprintf(stderr, "ERROR: La zona Z%d se encuentra vacia\n", nro_origen);
         return FALLO;
     }
     if(zona_dest->cantcont==zona_dest->maxcont){
-        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible", nro_destino);
+        fprintf(stderr,"ERROR: La zona Z%d no tiene capacidad disponible\n", nro_destino);
         return FALLO;
     }
     PeekStack(&(zona_ori->pilacont), codcont, sizeof(codcont));
     if(!PushStack(&(zona_dest->pilacont), codcont, strlen(codcont)+1)){
-        fprintf(stderr, "ERROR: Memoria Insuficiente para reubicar el contenedor");
+        fprintf(stderr, "ERROR: Memoria Insuficiente para reubicar el contenedor\n");
         return ERROR_MALLOC;
     }
     PopStack(&(zona_ori->pilacont), codcont, sizeof(codcont));

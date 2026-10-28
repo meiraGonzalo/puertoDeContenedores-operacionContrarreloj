@@ -9,7 +9,12 @@
 
 int simulacion();
 void estadoIniciar(tEstado* sistema);
-int bloqueoOperativo (tEstado* sis, tCola* camionesEspera);
-void avanzarRelojAuto (tEstado*);
+void procesarEventos(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, tOperador* usuario);
+int proximoEvento(tEstado* sis, int duracion);
+int hayOperacionValida(tEstado* sis, tCola* camionesEspera, const tConfig* conf);
+int finalizacionNormal(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf);
+int bloqueoOperativo(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf);
+int jornadaFinalizada(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf);
+void avanzarRelojAuto(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, tOperador* usuario, const tConfig* conf);
 
 #endif // SIMULACION_H_INCLUDED

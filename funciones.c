@@ -15,96 +15,83 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     tBuque buque;
     tCamion camion;
     char codcont[TAM_COD];
-    int i,j,total_contenedores=0,cant_buques = GenerarRandom(MIN_BUQUES, conf->cant_max_buques), cant_camiones=GenerarRandom(MIN_CAMIONES, conf->cant_max_camiones),cant_contenedores, posrandom;
-    int finLlegada = conf->duracion_jornada -(conf->cant_max_buques*conf->cant_max_contenedores*conf->tiempo_descarga + conf->cant_max_camiones*conf->tiempo_descarga);
+    int i, j, total_contenedores=0, cant_contenedores, cant_camiones, posrandom;
+    int presupuesto=conf->duracion_jornada*65/100; //maximo de minutos de trabajo obligatorio (descargar + entregar)
+    int tope_buques=presupuesto/(conf->tiempo_descarga+conf->tiempo_carga); //como minimo cada buque trae un contenedor
+    int cant_buques;
+    int max_por_buque;
+    int ultimo_camion=conf->duracion_jornada-conf->tiempo_carga; //un camion que llega despues ya no se puede atender
     tLista lista;
+    FILE *fpuerto;
 
-    FILE *fpuerto=fopen(sim, "wt");
-    if(!fpuerto){
+    if(tope_buques>conf->cant_max_buques) tope_buques=conf->cant_max_buques;
+    if(tope_buques<1) tope_buques=1;
+    cant_buques=GenerarRandom((tope_buques+1)/2, tope_buques);
+    max_por_buque=presupuesto/(cant_buques*(conf->tiempo_descarga+conf->tiempo_carga)); //cada contenedor cuesta como maximo descarga + carga
+    if(max_por_buque>conf->cant_max_contenedores) max_por_buque=conf->cant_max_contenedores;
+    if(max_por_buque<1) max_por_buque=1;
+    if(ultimo_camion<0) ultimo_camion=0;
+    int tiemposBuques[cant_buques];
+
+    fpuerto=fopen(sim, "wt");
+    if(!fpuerto)
         return ERROR_ARCHIVO;
-    }
     CrearLista(&lista);
     fprintf(fpuerto,"JORNADA: %d\n", conf->duracion_jornada);
     fprintf(fpuerto,"MUELLES: %d\n", conf->cantidad_muelles);
     fprintf(fpuerto,"ZONAS: %d\n",conf->cantidad_zonas);
     fprintf(fpuerto,"CAPACIDAD_PILA: %d\n",conf->capacidad_pila);
 
+    //los buques llegan en la primera mitad de la jornada y el primero en T=0
     fprintf(fpuerto,"\n[BUQUES]\n");
-    if (finLlegada <0) finLlegada = conf->duracion_jornada; //si el escenario no es factible, no limitamos
-    int tiemposBuquesRand[cant_buques];
-    for (i=0; i < cant_buques; i++)
-    {
-        tiemposBuquesRand[i] = GenerarRandom(0, finLlegada);
-    }
-    ordenarTiempos(tiemposBuquesRand, cant_buques);
+    for(i=0;i<cant_buques;i++)
+        tiemposBuques[i]=GenerarRandom(0, conf->duracion_jornada/2);
+    ordenarTiempos(tiemposBuques, cant_buques);
+    tiemposBuques[0]=0;
 
-    i=0;
-    while(i<cant_buques){
-        fprintf(fpuerto,"B%03d;T=%d;C=",i+1,tiemposBuquesRand[i]);
-        cant_contenedores=GenerarRandom(MIN_CONT_BUQUE,conf->cant_max_contenedores);
-        j=0;
-        sprintf(buque.cod, "B%03d",i+1);
-        buque.tiempo=tiemposBuquesRand[i];
+    for(i=0;i<cant_buques;i++){
+        cant_contenedores=GenerarRandom((max_por_buque+1)/2, max_por_buque);
+        sprintf(buque.cod, "B%03d", i+1);
+        buque.tiempo=tiemposBuques[i];
         CreateQueue(&buque.contenedores);
-        while(j<cant_contenedores){
-            fprintf(fpuerto,"C%d%02d",i+1,j+1);
-            if(j<cant_contenedores-1)
-                fprintf(fpuerto,",");
-            sprintf(codcont,"C%d%02d", i+1,j+1);
-            if(!EnQueue(&buque.contenedores, codcont, strlen(codcont)+1))
-            {
-                while (DeQueue(buques, &buque, sizeof(tBuque)))
-                {
-                    VaciarCola(&buque.contenedores);
-                }
-                VaciarLista(&lista);
-                fprintf(stderr, "ERROR: memoria insuficiente para crear cola de buques programados\n");
+        fprintf(fpuerto,"%s;T=%d;C=", buque.cod, buque.tiempo);
+        for(j=0;j<cant_contenedores;j++){
+            sprintf(codcont,"C%d%02d", i+1, j+1);
+            fprintf(fpuerto,(j<cant_contenedores-1)?"%s,":"%s", codcont);
+            if(!EnQueue(&buque.contenedores, codcont, strlen(codcont)+1) || !InsPrinLista(&lista, codcont, strlen(codcont)+1)){
+                fclose(fpuerto);
                 return ERROR_MALLOC;
             }
-            InsPrinLista(&lista,codcont, strlen(codcont)+1);
             total_contenedores++;
-            j++;
         }
-        if(!EnQueue(buques, &buque, sizeof(tBuque)))
-        {
-            while (DeQueue(buques, &buque, sizeof(tBuque)))
-            {
-                VaciarCola(&buque.contenedores);
-            }
-            VaciarLista(&lista);
-            fprintf(stderr, "ERROR: memoria insuficiente para crear cola de buques programados\n");
+        fprintf(fpuerto,"\n");
+        if(!EnQueue(buques, &buque, sizeof(tBuque))){
+            fclose(fpuerto);
             return ERROR_MALLOC;
         }
-        fprintf(fpuerto, "\n");
-        i++;
     }
 
+    //entre el 60% y el 100% de los contenedores son pedidos por un camion (sin superar el maximo configurado)
+    cant_camiones=GenerarRandom((total_contenedores*60+99)/100, total_contenedores);
+    if(cant_camiones>conf->cant_max_camiones) cant_camiones=conf->cant_max_camiones;
+    int tiemposCamiones[cant_camiones];
+    for(i=0;i<cant_camiones;i++)
+        tiemposCamiones[i]=GenerarRandom(0, ultimo_camion);
+    ordenarTiempos(tiemposCamiones, cant_camiones);
+
     fprintf(fpuerto,"\n[CAMIONES]\n");
-    i=0;
-    cant_camiones=(cant_camiones>total_contenedores)?total_contenedores:cant_camiones;
-    int tiemposCamRand[cant_buques];
-    for (i=0; i < cant_camiones; i++)
-    {
-        tiemposCamRand[i] = GenerarRandom(0, finLlegada);
-    }
-    ordenarTiempos(tiemposCamRand, cant_camiones);
-    i=0;
-    while(i<cant_camiones){
+    for(i=0;i<cant_camiones;i++){
         posrandom=GenerarRandom(0, total_contenedores-1);
-        OutPosLista(&lista, codcont, sizeof(codcont),posrandom);
-        fprintf(fpuerto,"K00%d;T=%d;C=%s\n",i+1,tiemposCamRand[i],codcont);
-        sprintf(camion.codcamion,"K00%d",i+1);
+        OutPosLista(&lista, codcont, sizeof(codcont), posrandom); //lo saca de la lista: un contenedor no lo piden dos camiones
+        total_contenedores--;
+        sprintf(camion.codcamion, "K%03d", i+1);
         strcpy(camion.codcont, codcont);
-        camion.tiempo=tiemposCamRand[i];
-        if(!EnQueue(camiones, &camion, sizeof(tCamion)))
-        {
-            VaciarCola(camiones);
-            VaciarLista(&lista);
-            fprintf (stderr, "ERROR: memoria insuficiente para crear cola de camiones programados\n");
+        camion.tiempo=tiemposCamiones[i];
+        fprintf(fpuerto,"%s;T=%d;C=%s\n", camion.codcamion, camion.tiempo, camion.codcont);
+        if(!EnQueue(camiones, &camion, sizeof(tCamion))){
+            fclose(fpuerto);
             return ERROR_MALLOC;
         }
-        total_contenedores--;
-        i++;
     }
     fclose(fpuerto);
     VaciarLista(&lista);
@@ -112,8 +99,9 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
 }
 
 int GenerarRandom(int min, int max){
-    max=(min+3>max)?max:min+3;
-    return min+ rand() % (max-min+1);
+    if(max<min)
+        return min;
+    return min+ rand()%(max-min+1);
 }
 
 int ValidarRangoInt(int num, int liminf, int limsup){

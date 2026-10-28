@@ -29,5 +29,6 @@ tLista* BuscarMenor(tLista *pLista, int cmp(void*, void*));
 int OrdenarLista(tLista *pLista, int cmp(void*, void*));
 void VaciarLista(tLista *pLista);
 void *PtrPosLista(tLista *pLista, size_t pos);
+int VerPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos);
 
 #endif // LISTA_H_INCLUDED

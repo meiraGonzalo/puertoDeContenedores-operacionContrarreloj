@@ -57,18 +57,18 @@ int simulacion()
     system("cls");
     printf("Bievenido a Operacion Contrarreloj!\n\n");
     puts ("Puede seleccionar el comando OPS para ver las operaciones disponibles");
-    while(sim.tiempo_actual<config.duracion_jornada && !bloqueoOperativo(&sim, &camionesEspera)){
-        if(IsEmptyQueue(&camionesEspera) && todosMuellesVacios(&sim.muelles))
-            avanzarRelojAuto(&sim);
-        EmbarcarBuquesVacios(&sim.muelles, &usuario);
-        AsignarBuques(&sim.buques_programados, &sim.muelles, &buquesEspera, sim.tiempo_actual);
-        asignarCamiones(&sim, &camionesEspera);
+    procesarEventos(&sim, &buquesEspera, &camionesEspera, &usuario); //eventos programados para T=0
+    avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
+    while(!jornadaFinalizada(&sim, &buquesEspera, &camionesEspera, &config))
+    {
         printf("<Operador>");
         fgets(buffer_consola, sizeof(buffer_consola), stdin);
         ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &buquesEspera, &camionesEspera, &sim.tiempo_actual, config, &usuario, log);
+        procesarEventos(&sim, &buquesEspera, &camionesEspera, &usuario);
+        avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
     }
     system ("cls");
-    if(bloqueoOperativo(&sim, &camionesEspera))
+    if(bloqueoOperativo(&sim, &buquesEspera, &camionesEspera, &config))
         printf ("Finaliza la jornada por no quedar acciones significativas por realizarse\n");
     else if (sim.tiempo_actual<=config.duracion_jornada)
         printf ("Finaliza la jornada por cumplirse su duracion establecida\n");
@@ -100,54 +100,207 @@ void estadoIniciar(tEstado* sistema)
     sistema->tiempo_actual = 0;
 }
 
-int bloqueoOperativo (tEstado* sis, tCola* camionesEspera)
-{
-    int bloqueo = EXITO;
+/* ---------- Eventos ---------- */
 
-    if (!IsEmptyQueue(&sis->buques_programados))
-    {
-        bloqueo = FALLO;
-    }
-    if(!IsEmptyQueue(&sis->camiones_programados))
-    {
-        bloqueo = FALLO;
-    }
-    if(!IsEmptyQueue(camionesEspera))
-    {
-        bloqueo = FALLO;
-    }
-    if (!todosMuellesVacios(&sis->muelles))
-    {
-        bloqueo = FALLO;
-    }
-    return bloqueo;
+void procesarEventos(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, tOperador* usuario)
+{
+    EmbarcarBuquesVacios(&sis->muelles, usuario);                              // 1) consecuencias de la operacion: libera muelles
+    AsignarBuques(&sis->buques_programados, &sis->muelles, buquesEspera, sis->tiempo_actual); // 2) arribos de buques + asignacion a muelles
+    asignarCamiones(sis, camionesEspera);                                      // 3) arribos de camiones
 }
 
-void avanzarRelojAuto (tEstado* sim)
+/* Minuto del proximo evento programado dentro de la jornada, o -1 si no queda ninguno */
+int proximoEvento(tEstado* sis, int duracion)
 {
     tBuque b;
-    tCamion c;
-    int min_buque = -1;
-    int min_camion = -1;
-    int minutos = 0;
+    tCamion k;
+    int prox = -1;
 
-    if (ViewFirst(&sim->buques_programados, &b, sizeof(tBuque)) == EXITO) {
-        min_buque = b.tiempo - sim->tiempo_actual;
-    }
-    if (ViewFirst(&sim->camiones_programados, &c, sizeof(tCamion)) == EXITO) {
-        min_camion = c.tiempo - sim->tiempo_actual;
-    }
+    if (ViewFirst(&sis->buques_programados, &b, sizeof(tBuque)) && b.tiempo <= duracion)
+        prox = b.tiempo;
+    if (ViewFirst(&sis->camiones_programados, &k, sizeof(tCamion)) && k.tiempo <= duracion
+        && (prox == -1 || k.tiempo < prox))
+        prox = k.tiempo;
+    return prox;
+}
 
-    if (min_buque >= 0 && min_camion >= 0) {
-        minutos = (min_buque <= min_camion) ? min_buque : min_camion;
-    } else if (min_buque >= 0) {
-        minutos = min_buque;
-    } else if (min_camion >= 0) {
-        minutos = min_camion;
-    }
+/* ---------- Operaciones validas (consultas, no modifican nada) ---------- */
 
-    if (minutos > 0) {
-        sim->tiempo_actual += minutos;
-        printf("Se avanzo automaticamente %d minuto/s\n", minutos);
+static int hayZonaConLugar(tLista* zonas, int nroZonaExcluida)
+{
+    tZona z;
+    int pos = 0, hay = 0;
+
+    while (!hay && VerPosLista(zonas, &z, sizeof(tZona), pos++) != POS_INVALIDA)
+        hay = (z.nrozona != nroZonaExcluida && z.cantcont < z.maxcont);
+    return hay;
+}
+
+static int hayDescargaValida(tEstado* sis, const tConfig* conf) //hya tiempo, lugar y algo para descargar
+{
+    tMuelle m;
+    int pos = 0, hay = 0;
+
+    if (sis->tiempo_actual + conf->tiempo_descarga <= conf->duracion_jornada
+        && hayZonaConLugar(&sis->zonas, 0))
+    {
+        while (!hay && VerPosLista(&sis->muelles, &m, sizeof(tMuelle), pos++) != POS_INVALIDA)
+            hay = (m.estado == 0 && !IsEmptyQueue(&m.asignado.contenedores));
+    }
+    return hay;
+}
+
+typedef struct
+{
+    tLista* zonas;
+    char pedidos[VER_CAMIONES][TAM_COD];
+    int cantPedidos;
+    int hay;
+} tBusquedaReu;
+
+// Copia los codigos pedidos por los primeros camiones de la cola (hasta max).
+
+static int ventanaPedidos(tCola* camionesEspera, char pedidos[][TAM_COD], int max)
+{
+    tCamion k;
+    tCola aux;
+    int cant = 0;
+
+    CreateQueue(&aux);
+    while (DeQueue(camionesEspera, &k, sizeof(tCamion)))
+    {
+        if (cant < max)
+        {
+            strcpy(pedidos[cant], k.codcont);
+            cant++;
+        }
+        EnQueue(&aux, &k, sizeof(tCamion));
+    }
+    while (DeQueue(&aux, &k, sizeof(tCamion)))
+        EnQueue(camionesEspera, &k, sizeof(tCamion));
+    return cant;
+}
+
+static int esPedido(const char* cod, char pedidos[][TAM_COD], int cant)
+{
+    int i = 0, es = 0;
+
+    while (!es && i < cant)
+    {
+        es = (strcmpi(cod, pedidos[i]) == 0);
+        i++;
+    }
+    return es;
+}
+
+/* Accion para RecorrerLista: marca busqueda->hay si en la zona hay, debajo del tope, un contenedor pedido
+   y existe otra zona con lugar para mover el tope. */
+static void zonaTapaPedido(void* info, void* param)
+{
+    tZona* z = (tZona*)info;
+    tBusquedaReu* busqueda = (tBusquedaReu*)param;
+    tPila aux;
+    char cod[TAM_COD];
+    int tapa = 0;
+
+    if (!busqueda->hay && z->cantcont > 1 && hayZonaConLugar(busqueda->zonas, z->nrozona))
+    {
+        CreateStack(&aux);
+        PopStack(&z->pilacont, cod, sizeof(cod));            //el tope no esta tapado
+        PushStack(&aux, cod, strlen(cod) + 1);
+        while (PopStack(&z->pilacont, cod, sizeof(cod)))
+        {
+            tapa = tapa || esPedido(cod, busqueda->pedidos, busqueda->cantPedidos);
+            PushStack(&aux, cod, strlen(cod) + 1);
+        }
+        while (PopStack(&aux, cod, sizeof(cod)))
+            PushStack(&z->pilacont, cod, strlen(cod) + 1);
+        busqueda->hay = tapa;
+    }
+}
+
+/* REU "util": mover el tope de una zona destapa un contenedor pedido por los camiones de la ventana de planificacion.
+   Una reubicacion que no destapa nada es optativa: el operador puede hacerla cuando se le pide una orden,
+   pero no cuenta como operacion pendiente para el avance automatico. */
+static int hayReubicacionUtil(tEstado* sis, tCola* camionesEspera, const tConfig* conf)//
+{
+    tBusquedaReu busqueda;
+
+    busqueda.zonas = &sis->zonas;
+    busqueda.cantPedidos = 0;
+    busqueda.hay = 0;
+    if (sis->tiempo_actual + conf->tiempo_reubicacion <= conf->duracion_jornada)
+    {
+        busqueda.cantPedidos = ventanaPedidos(camionesEspera, busqueda.pedidos, VER_CAMIONES);
+        if (busqueda.cantPedidos > 0)
+            RecorrerLista(&sis->zonas, zonaTapaPedido, &busqueda);
+    }
+    return busqueda.hay;
+}
+
+static int hayEntregaValida(tEstado* sis, tCola* camionesEspera, const tConfig* conf)//hay tiempo, un camion al frente y el contenedor que pide esta al tope de alguna zona
+{
+    tCamion k;
+    tZona z;
+    char tope[TAM_COD];
+    int pos = 0, hay = 0;
+
+    if (sis->tiempo_actual + conf->tiempo_carga <= conf->duracion_jornada
+        && ViewFirst(camionesEspera, &k, sizeof(tCamion)))
+    {
+        while (!hay && VerPosLista(&sis->zonas, &z, sizeof(tZona), pos++) != POS_INVALIDA)
+            hay = (z.cantcont > 0 && PeekStack(&z.pilacont, tope, sizeof(tope))
+                   && strcmpi(tope, k.codcont) == 0);
+    }
+    return hay;
+}
+
+int hayOperacionValida(tEstado* sis, tCola* camionesEspera, const tConfig* conf)
+{
+    return hayDescargaValida(sis, conf)
+        || hayReubicacionUtil(sis, camionesEspera, conf)
+        || hayEntregaValida(sis, camionesEspera, conf);
+}
+
+/* ---------- Fin de jornada ---------- */
+
+int finalizacionNormal(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf)
+{
+    return proximoEvento(sis, conf->duracion_jornada) == -1
+        && IsEmptyQueue(buquesEspera)
+        && todosMuellesVacios(&sis->muelles)
+        && IsEmptyQueue(camionesEspera);
+}
+
+int bloqueoOperativo(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf)
+{
+    return !finalizacionNormal(sis, buquesEspera, camionesEspera, conf)
+        && !hayOperacionValida(sis, camionesEspera, conf)
+        && proximoEvento(sis, conf->duracion_jornada) == -1;
+}
+
+int jornadaFinalizada(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf)
+{
+    return sis->tiempo_actual >= conf->duracion_jornada
+        || finalizacionNormal(sis, buquesEspera, camionesEspera, conf)
+        || bloqueoOperativo(sis, buquesEspera, camionesEspera, conf);
+}
+
+/* ---------- Avance automatico ---------- */
+
+/* Mientras no haya ninguna operacion de movimiento valida y quede algun evento
+   dentro de la jornada, salta al proximo evento y lo procesa. Se repite porque
+   un arribo puede no habilitar ninguna operacion (ej: camion que espera un
+   contenedor de un buque que todavia no llego). */
+void avanzarRelojAuto(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, tOperador* usuario, const tConfig* conf)
+{
+    int prox;
+
+    while (!hayOperacionValida(sis, camionesEspera, conf)
+           && (prox = proximoEvento(sis, conf->duracion_jornada)) != -1)
+    {
+        printf("Se avanzo automaticamente %d minuto/s (T=%d)\n", prox - sis->tiempo_actual, prox);
+        sis->tiempo_actual = prox;
+        procesarEventos(sis, buquesEspera, camionesEspera, usuario);
     }
 }
