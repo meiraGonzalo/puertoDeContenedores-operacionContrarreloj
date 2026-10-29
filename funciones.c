@@ -130,6 +130,12 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
     char *aux;
     char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS", NULL};
     char c1, c2;
+    char cmd[TAM_CONSOLA]="", p1[TAM_CONSOLA]="", p2[TAM_CONSOLA]="", sobra[TAM_CONSOLA]="", normalizada[4*TAM_CONSOLA];
+    int cant_tokens=sscanf(linea, "%s %s %s %s", cmd, p1, p2, sobra);
+    if(cant_tokens<1)
+        return INSTR_INVALIDA;
+    sprintf(normalizada, "%s %s %s\n", cmd, p1, p2); //una sola separacion entre palabras
+    linea=normalizada;
     aux=strchr(linea,' ');
     if(!aux)
         aux=strchr(linea,'\n');
@@ -142,6 +148,8 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
     if (strlen(linea) == 0) {
         return INSTR_INVALIDA;
     }
+    if((pos_instr<=1 && cant_tokens!=3) || (pos_instr>1 && cant_tokens!=1)) //DES y REU llevan 2 parametros; el resto ninguno
+        return PARAM_INVALIDO;
     if(pos_instr==0 || pos_instr==1){//buscamos los parametro si es DES o REU
         if(!aux)
             return PARAM_INVALIDO;
@@ -163,9 +171,9 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             return PARAM_INVALIDO;
         }
         c2 = toupper(c2);
-        if(pos_instr==0 && ((!ValidarRangoInt(param1,1,conf.cantidad_muelles) && c1 != 'M') || (!ValidarRangoInt(param2, 1,conf.cantidad_zonas) && c2 != 'Z')))
+        if(pos_instr==0 && (c1!='M' || c2!='Z' || !ValidarRangoInt(param1,1,conf.cantidad_muelles) || !ValidarRangoInt(param2,1,conf.cantidad_zonas)))
             return PARAM_INVALIDO;
-        if(pos_instr==1 && ((!ValidarRangoInt(param1,1,conf.cantidad_zonas) && c1 != 'Z') || (!ValidarRangoInt(param2, 1,conf.cantidad_zonas) && c2 != 'Z')))
+        if(pos_instr==1 && (c1!='Z' || c2!='Z' || !ValidarRangoInt(param1,1,conf.cantidad_zonas) || !ValidarRangoInt(param2,1,conf.cantidad_zonas)))
             return PARAM_INVALIDO;
     }
     switch(pos_instr){
@@ -199,7 +207,6 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             break;
         case 3: //ENT
             if(!Entregar(zonas,camiones, usuario, log, tiempo, conf)){
-                fprintf(stderr, "ERROR: El contenedor pedido no esta en el tope de la pila de una zona\n");
                 return FALLO;
             }
             else{

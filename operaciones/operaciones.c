@@ -187,5 +187,4 @@ void opsDisponibles ()
     puts ("ENT - Entregar contenedor al proximo camion. Sintaxis: ENT");
     puts ("VER - Ver estado. Sintaxis: VER");
     puts ("ESP - Esperar un minuto. Sintaxis: ESP");
-    puts ("AVZ - Esperar n minutos. Sintaxis: AVZ <minutos>");
 }

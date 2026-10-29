@@ -68,10 +68,12 @@ int simulacion()
         avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
     }
     system ("cls");
-    if(bloqueoOperativo(&sim, &buquesEspera, &camionesEspera, &config))
-        printf ("Finaliza la jornada por no quedar acciones significativas por realizarse\n");
-    else if (sim.tiempo_actual<=config.duracion_jornada)
+    if(finalizacionNormal(&sim, &buquesEspera, &camionesEspera, &config))
+        printf ("Finaliza la jornada: no quedan eventos, buques ni camiones por atender\n");
+    else if (sim.tiempo_actual>=config.duracion_jornada)
         printf ("Finaliza la jornada por cumplirse su duracion establecida\n");
+    else
+        printf ("Finaliza la jornada por bloqueo operativo: no hay operaciones posibles ni eventos pendientes\n");
     while (DeQueue(&camionesEspera, &c, sizeof(tCamion)))
     {
         camionesPendientes++;

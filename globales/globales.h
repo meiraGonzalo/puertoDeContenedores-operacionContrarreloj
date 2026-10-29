@@ -11,7 +11,7 @@
 #define MAX_COUNT 150
 #define ERROR_ARCHIVO 0
 #define CONF_INVALIDA 0
-#define INSTR_INVALIDA 0
+#define INSTR_INVALIDA -2
 #define PARAM_INVALIDO -1
 #define POS_INVALIDA -1
 #define FIN_LLEGADA 20 //tiempo antes de que termine la jornada en el que no pueden llegar mas buques

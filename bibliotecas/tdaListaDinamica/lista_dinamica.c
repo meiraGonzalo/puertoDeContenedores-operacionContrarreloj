@@ -68,7 +68,7 @@ int OutPosLista(tLista *pLista, void *info, size_t taminfo,size_t pos){
         return POS_INVALIDA;
     aux=*pLista;
     *pLista=aux->sig;
-    memcpy(info, aux->info, taminfo);
+    memcpy(info, aux->info, MIN(taminfo, aux->taminfo));
     free(aux->info);
     free(aux);
     return EXITO;
@@ -90,7 +90,7 @@ void *PtrPosLista(tLista *pLista, size_t pos){
         pLista=&(*pLista)->sig;
         pos--;
     }
-    if(pos)
+    if(pos || !*pLista)
         return NULL;
     else{
         return (*pLista)->info;

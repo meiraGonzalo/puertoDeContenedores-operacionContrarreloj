@@ -7,7 +7,8 @@ void iniciarUsuario(tOperador* usuario)
 
     do{
     puts("Ingrese el nombre del operador de la jornada:");
-    fgets(linea, TAM_MAXIMO_NOMBRE_OP, stdin);
+    if(fgets(linea, TAM_MAXIMO_NOMBRE_OP, stdin))
+        return;
     } while (!lineaValida(linea));
     linea[strcspn(linea, "\n")] = '\0';
     strcpy(usuario->nombre, linea);
@@ -256,5 +257,5 @@ int cmpPuntuacion(void* a, void* b)
 {
     const tOperador* ap = (tOperador*)a;
     const tOperador* bp = (tOperador*)b;
-    return (ap->puntuacion-bp->puntuacion);
+    return (bp->puntuacion-ap->puntuacion);
 }
