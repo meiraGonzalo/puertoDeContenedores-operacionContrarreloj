@@ -7,8 +7,7 @@ void iniciarUsuario(tOperador* usuario)
 
     do{
     puts("Ingrese el nombre del operador de la jornada:");
-    if(fgets(linea, TAM_MAXIMO_NOMBRE_OP, stdin))
-        return;
+    fgets(linea, TAM_MAXIMO_NOMBRE_OP, stdin);
     } while (!lineaValida(linea));
     linea[strcspn(linea, "\n")] = '\0';
     strcpy(usuario->nombre, linea);

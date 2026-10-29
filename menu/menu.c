@@ -24,8 +24,7 @@ void seleccionarMenu(int* opcion)
     int temp, esValido = FALLO;
     char bufferEntrada [TAM_BUFFER];
     do {
-        if(!fgets(bufferEntrada, sizeof(bufferEntrada), stdin))
-            return;
+        fgets(bufferEntrada, sizeof(bufferEntrada), stdin);
         if (sscanf(bufferEntrada, "%d", &temp) != 1)
             fprintf(stderr, "ERROR: FORMATO INVALIDO\n");
         else if (temp < SIM || temp > EXIT)
