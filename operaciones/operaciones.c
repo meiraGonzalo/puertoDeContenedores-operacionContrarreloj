@@ -187,4 +187,11 @@ void opsDisponibles ()
     puts ("ENT - Entregar contenedor al proximo camion. Sintaxis: ENT");
     puts ("VER - Ver estado. Sintaxis: VER");
     puts ("ESP - Esperar un minuto. Sintaxis: ESP");
+    puts ("EXT - Finalizar la jornada anticipadamente. sintaxis: EXT");
+}
+
+void salidaAnticipada (FILE* log, int* salida, int* tiempo)
+{
+    fprintf(log, "CODIGO:EXT\tFINALIZA LA JORNADA ANTICIPADAMENTE\tTiempo de Inicio:%02d\n", *tiempo);
+    *salida = EXITO;
 }

@@ -1,1 +1,0 @@
-CODIGO:DES	Tiempo de Inicio:00	 Tiempo de Fin:02	Contenedor:C101,	Origen:M1	Destino:Z1

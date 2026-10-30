@@ -125,10 +125,10 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
     return EXITO;
 }
 
-int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log){
+int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log, int* salida){
     int pos_instr, param1, param2 ;
     char *aux;
-    char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS", NULL};
+    char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS", "EXT", NULL};
     char c1, c2;
     char cmd[TAM_CONSOLA]="", p1[TAM_CONSOLA]="", p2[TAM_CONSOLA]="", sobra[TAM_CONSOLA]="", normalizada[4*TAM_CONSOLA];
     int cant_tokens=sscanf(linea, "%s %s %s %s", cmd, p1, p2, sobra);
@@ -225,6 +225,9 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             break;
         case 5://OPS
             opsDisponibles();
+            break;
+        case 6://EXT
+            salidaAnticipada(log, salida, tiempo);
             break;
         default:
             printf ("Operacion no reconocida\n");

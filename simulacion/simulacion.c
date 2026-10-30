@@ -9,7 +9,7 @@ int simulacion()
     tCola buquesEspera;
     tCola camionesEspera;
     tCamion c;
-    int camionesPendientes = 0, cantMov;
+    int camionesPendientes = 0, cantMov, salir = FALLO;
     FILE* log;
 
     system("cls");
@@ -59,21 +59,25 @@ int simulacion()
     puts ("Puede seleccionar el comando OPS para ver las operaciones disponibles");
     procesarEventos(&sim, &buquesEspera, &camionesEspera, &usuario); //eventos programados para T=0
     avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
-    while(!jornadaFinalizada(&sim, &buquesEspera, &camionesEspera, &config))
+    while(!jornadaFinalizada(&sim, &buquesEspera, &camionesEspera, &config) && salir == FALLO)
     {
         printf("<Operador>");
         fgets(buffer_consola, sizeof(buffer_consola), stdin);
-        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &buquesEspera, &camionesEspera, &sim.tiempo_actual, config, &usuario, log);
+        ProcesarInstruccion(buffer_consola, &sim.muelles, &sim.zonas, &buquesEspera, &camionesEspera, &sim.tiempo_actual, config, &usuario, log, &salir);
         procesarEventos(&sim, &buquesEspera, &camionesEspera, &usuario);
         avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
     }
     system ("cls");
-    if(finalizacionNormal(&sim, &buquesEspera, &camionesEspera, &config))
-        printf ("Finaliza la jornada: no quedan eventos, buques ni camiones por atender\n");
+    if (salir == EXITO)
+        printf ("Finaliza la jornada de manera anticipada por decision del usuario\n");
+    else if(finalizacionNormal(&sim, &buquesEspera, &camionesEspera, &config))
+        printf ("Finaliza la jornada exitosamente: no quedan eventos, buques ni camiones por atender\n");
     else if (sim.tiempo_actual>=config.duracion_jornada)
         printf ("Finaliza la jornada por cumplirse su duracion establecida\n");
     else
-        printf ("Finaliza la jornada por bloqueo operativo: no hay operaciones posibles ni eventos pendientes\n");
+        printf ("Finaliza la jornada por bloqueo operativo: no hay operaciones posibles para realizar\n");
+    while (DeQueue(&sim.camiones_programados, &c, sizeof(tCamion)))
+        EnQueue(&camionesEspera, &c, sizeof(tCamion));
     while (DeQueue(&camionesEspera, &c, sizeof(tCamion)))
     {
         camionesPendientes++;
@@ -90,6 +94,7 @@ int simulacion()
     archivarJornada(log, &usuario, cantMov);
     fclose(log);
     remove("log.txt");
+    vaciarSimulacion(&sim, &camionesEspera, &buquesEspera);
     return EXITO;
 }
 
@@ -304,5 +309,33 @@ void avanzarRelojAuto(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, 
         printf("Se avanzo automaticamente %d minuto/s (T=%d)\n", prox - sis->tiempo_actual, prox);
         sis->tiempo_actual = prox;
         procesarEventos(sis, buquesEspera, camionesEspera, usuario);
+    }
+}
+
+
+void vaciarSimulacion (tEstado* sim, tCola* camionesEspera, tCola* buquesEspera)
+{
+    tBuque b;
+    tZona z;
+
+    while (DeQueue(&sim->buques_programados, &b, sizeof(tBuque)))
+    {
+        VaciarCola(&b.contenedores);
+    }
+
+    while (DeQueue(buquesEspera, &b, sizeof(tBuque)))
+    {
+        VaciarCola(&b.contenedores);
+    }
+
+    VaciarCola(&sim->camiones_programados);
+
+    VaciarCola(camionesEspera);
+
+    VaciarLista(&sim->muelles);
+
+    while (OutPrinLista(&sim->zonas, &z, sizeof(tZona)) != LISTA_VACIA)
+    {
+        VaciarPila(&z.pilacont);
     }
 }

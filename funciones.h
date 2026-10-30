@@ -13,7 +13,7 @@ int EscenarioRealizable (tConfig conf);
 int GenerarRandom(int liminf, int limsup);
 int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones);
 int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila);
-int ProcesarInstruccion(char *instruccion,tLista *muelles, tLista *zonas,tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log);
+int ProcesarInstruccion(char *instruccion,tLista *muelles, tLista *zonas,tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log, int* salida);
 int ValidarRangoInt(int num, int liminf, int limsup);
 void muellesVacios (void* a, void* flag);
 void ordenarTiempos(int tiemposGenerados[], int cantidadElementos);

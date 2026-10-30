@@ -16,5 +16,7 @@ int finalizacionNormal(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera,
 int bloqueoOperativo(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf);
 int jornadaFinalizada(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, const tConfig* conf);
 void avanzarRelojAuto(tEstado* sis, tCola* buquesEspera, tCola* camionesEspera, tOperador* usuario, const tConfig* conf);
+void vaciarSimulacion (tEstado* sim, tCola* camionesEspera, tCola* buquesEspera);
+
 
 #endif // SIMULACION_H_INCLUDED
