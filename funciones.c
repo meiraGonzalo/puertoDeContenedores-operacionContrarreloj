@@ -20,6 +20,8 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     int tope_buques=presupuesto/(conf->tiempo_descarga+conf->tiempo_carga); //como minimo cada buque trae un contenedor
     int cant_buques;
     int max_por_buque;
+    int tiemposCamiones[conf->cant_max_camiones];
+    int tiemposBuques[conf->cant_max_buques];
     int ultimo_camion=conf->duracion_jornada-conf->tiempo_carga; //un camion que llega despues ya no se puede atender
     tLista lista;
     FILE *fpuerto;
@@ -31,7 +33,6 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     if(max_por_buque>conf->cant_max_contenedores) max_por_buque=conf->cant_max_contenedores;
     if(max_por_buque<1) max_por_buque=1;
     if(ultimo_camion<0) ultimo_camion=0;
-    int tiemposBuques[cant_buques];
 
     fpuerto=fopen(sim, "wt");
     if(!fpuerto)
@@ -74,7 +75,6 @@ int GenerarSimulacion(char *sim, tConfig *conf, tCola *buques, tCola *camiones){
     //entre el 60% y el 100% de los contenedores son pedidos por un camion (sin superar el maximo configurado)
     cant_camiones=GenerarRandom((total_contenedores*60+99)/100, total_contenedores);
     if(cant_camiones>conf->cant_max_camiones) cant_camiones=conf->cant_max_camiones;
-    int tiemposCamiones[cant_camiones];
     for(i=0;i<cant_camiones;i++)
         tiemposCamiones[i]=GenerarRandom(0, ultimo_camion);
     ordenarTiempos(tiemposCamiones, cant_camiones);

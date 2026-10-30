@@ -28,7 +28,7 @@ int simulacion()
     CreateQueue(&camionesEspera);
     if (!EscenarioRealizable(config))
     {
-        system ("pause");
+        //system ("pause");
         //return FALLO; por ahora se permite que la simulacion pueda no ser correctamente finalizable
     }
 
