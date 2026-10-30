@@ -19,6 +19,6 @@ void muellesVacios (void* a, void* flag);
 void ordenarTiempos(int tiemposGenerados[], int cantidadElementos);
 int contarBuquesEspera (tCola* buquesEspera);
 int todosMuellesVacios (tLista* muelles);
-
+void ver (int *tiempo, tOperador* usuario, tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones);
 
 #endif // FUNCIONES_H_INCLUDED

@@ -125,56 +125,57 @@ int InicializarZonas(tLista *zonas, int cant_zonas, int cap_pila){
     return EXITO;
 }
 
-int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log, int* salida){
+int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones, int *tiempo, tConfig conf, tOperador* usuario, FILE* log, int* salida)
+{
     int pos_instr, param1, param2 ;
-    char *aux;
     char *instr_validas[]={"DES","REU","VER","ENT","ESP", "OPS", "EXT", NULL};
-    char c1, c2;
-    char cmd[TAM_CONSOLA]="", p1[TAM_CONSOLA]="", p2[TAM_CONSOLA]="", sobra[TAM_CONSOLA]="", normalizada[4*TAM_CONSOLA];
+    char c1, c2, extra;
+    char cmd[TAM_CONSOLA]="", p1[TAM_CONSOLA]="", p2[TAM_CONSOLA]="", sobra[TAM_CONSOLA]="";
     int cant_tokens=sscanf(linea, "%s %s %s %s", cmd, p1, p2, sobra);
+
     if(cant_tokens<1)
-        return INSTR_INVALIDA;
-    sprintf(normalizada, "%s %s %s\n", cmd, p1, p2); //una sola separacion entre palabras
-    linea=normalizada;
-    aux=strchr(linea,' ');
-    if(!aux)
-        aux=strchr(linea,'\n');
-    if(aux) {
-        *aux = 0;
-    }
-    pos_instr=BuscarParametro(linea, instr_validas);
-    if(pos_instr==-1)
-        return INSTR_INVALIDA;
-    if (strlen(linea) == 0) {
+    {
         return INSTR_INVALIDA;
     }
-    if((pos_instr<=1 && cant_tokens!=3) || (pos_instr>1 && cant_tokens!=1)) //DES y REU llevan 2 parametros; el resto ninguno
+
+    pos_instr=BuscarParametro(cmd, instr_validas);
+    if(pos_instr == POS_INVALIDA)
+    {
+        fprintf(stderr, "ERROR: Instruccion Invalida\n");
+        system ("pause");
+        return INSTR_INVALIDA;
+    }
+
+    if((pos_instr <= 1 && cant_tokens != 3) || (pos_instr>1 && cant_tokens!=1)) //DES y REU llevan 2 parametros; el resto ninguno
+    {
+        fprintf(stderr, "ERROR: Parametros Invalidos\n");
+        system ("pause");
         return PARAM_INVALIDO;
-    if(pos_instr==0 || pos_instr==1){//buscamos los parametro si es DES o REU
-        if(!aux)
-            return PARAM_INVALIDO;
-        linea=aux+1;
-        aux=strchr(linea, ' ');
-        if(!aux)
-            return PARAM_INVALIDO;
-        *aux = 0;
-        if (sscanf(linea, "%c%d", &c1, &param1) != 2) {
+    }
+
+    if(pos_instr==0 || pos_instr==1)//buscamos los parametro si es DES o REU
+    {
+        if (sscanf(p1, "%c%d%c", &c1, &param1, &extra) != 2 || sscanf(p2, "%c%d%c", &c2, &param2, &extra) != 2)
+        {
+            fprintf(stderr, "ERROR: Parametros Invalidos\n");
+            system("pause");
             return PARAM_INVALIDO;
         }
         c1 = toupper(c1);
-        linea=aux+1;
-        aux=strchr(linea, '\n');
-        if(aux) {
-            *aux = 0;
-        }
-        if (sscanf(linea, "%c%d", &c2, &param2) != 2) {
-            return PARAM_INVALIDO;
-        }
         c2 = toupper(c2);
-        if(pos_instr==0 && (c1!='M' || c2!='Z' || !ValidarRangoInt(param1,1,conf.cantidad_muelles) || !ValidarRangoInt(param2,1,conf.cantidad_zonas)))
+
+        if (pos_instr == 0 && (c1 != 'M' || c2 != 'Z' || !ValidarRangoInt(param1, 1, conf.cantidad_muelles) || !ValidarRangoInt(param2, 1, conf.cantidad_zonas)))
+        {
+            fprintf(stderr, "ERROR: Parametros Invalidos\n");
+            system("pause");
             return PARAM_INVALIDO;
-        if(pos_instr==1 && (c1!='Z' || c2!='Z' || !ValidarRangoInt(param1,1,conf.cantidad_zonas) || !ValidarRangoInt(param2,1,conf.cantidad_zonas)))
+        }
+        if (pos_instr == 1 && (c1 != 'Z' || c2 != 'Z' || !ValidarRangoInt(param1, 1, conf.cantidad_zonas) || !ValidarRangoInt(param2, 1, conf.cantidad_zonas)))
+        {
+            fprintf(stderr, "ERROR: Parametros Invalidos\n");
+            system("pause");
             return PARAM_INVALIDO;
+        }
     }
     switch(pos_instr){
         case 0: //DES
@@ -193,17 +194,7 @@ int ProcesarInstruccion(char *linea,tLista *muelles, tLista *zonas, tCola* buque
             }
             break;
         case 2: //VER
-            system("cls");
-            printf ("TIEMPO ACTUAL DE LA JORNADA: %d\n", *tiempo);
-            printf ("\nPUNTOS ACUMULADOS: %d\n\n", usuario->puntuacion);
-            printf ("MUELLES OCUPADOS:\n");
-            RecorrerLista(muelles, MostrarMuelle, NULL);
-            puts("");
-            RecorrerLista(zonas, VerZona, NULL);
-            puts("");
-            puts("");
-            VerCamiones(camiones, VER_CAMIONES,*tiempo);
-            printf ("Hay [%d] Buques en espera\n\n", contarBuquesEspera(buquesEspera));
+            ver(tiempo, usuario, muelles, zonas, buquesEspera, camiones);
             break;
         case 3: //ENT
             if(!Entregar(zonas,camiones, usuario, log, tiempo, conf)){
@@ -301,4 +292,19 @@ int todosMuellesVacios(tLista* muelles)
     int todosVacios = 1;
     RecorrerLista(muelles, muellesVacios, &todosVacios);
     return todosVacios;
+}
+
+void ver (int *tiempo, tOperador* usuario, tLista *muelles, tLista *zonas, tCola* buquesEspera, tCola *camiones)
+{
+        system("cls");
+        printf ("TIEMPO ACTUAL DE LA JORNADA: %d\n", *tiempo);
+        printf ("\nPUNTOS ACUMULADOS: %d\n\n", usuario->puntuacion);
+        printf ("MUELLES OCUPADOS:\n");
+        RecorrerLista(muelles, MostrarMuelle, NULL);
+        puts("");
+        RecorrerLista(zonas, VerZona, NULL);
+        puts("");
+        puts("");
+        VerCamiones(camiones, VER_CAMIONES,*tiempo);
+        printf ("Hay [%d] Buques en espera\n\n", contarBuquesEspera(buquesEspera));
 }

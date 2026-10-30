@@ -156,7 +156,12 @@ void actualizarRegUsuario (tOperador* usuario)
 void mostrarHistorialOperador(const char* nombreBuscado)
 {
     FILE* arch = fopen("jornadas.dat", "rb");
-    if (!arch) return;
+    if (!arch)
+    {
+        fprintf (stderr, "ERROR: No se pudo abrir el archivo de jornadas\n");
+        system ("pause");
+        return;
+    }
 
     tJornada cabecera;
     tMovimiento mov;
@@ -222,6 +227,7 @@ void ranking()
     if (!ops)
     {
         fprintf(stderr, "ERROR: NO SE PUDO ABRIR EL ARCHIVO DE OPERADORES\n");
+        system ("pause");
         return;
     }
 
@@ -234,6 +240,7 @@ void ranking()
             fprintf(stderr, "ERROR: SIN MEMORIA PARA INSERTAR OPERADOR EN EL RANKING\n");
             VaciarLista(&lista);
             fclose(ops);
+            system ("pause");
             return;
         }
     }

@@ -43,7 +43,7 @@ int Descargar(tLista *muelles, tLista *zonas, int nro_muelle, int nro_zona, FILE
     zona->cantcont++;
 
     printf("\nSe descargo el contenedor %s desde el muelle [M%d] a la zona de almacenamiento [Z%d]\n", codcont, muelle->nro, zona->nrozona);
-    fprintf(log, "CODIGO:DES\tTiempo de Inicio:%02d\t Tiempo de Fin:%02d\tContenedor:%s,\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, codcont,muelle->nro, zona->nrozona);
+    fprintf(log, "CODIGO:DES\tTiempo de Inicio:%02d\t Tiempo de Fin:%02d\tContenedor:%s\tOrigen:M%d\tDestino:Z%d\n", *tiempo, *tiempo+conf.tiempo_descarga, codcont,muelle->nro, zona->nrozona);
     return EXITO;
 }
 

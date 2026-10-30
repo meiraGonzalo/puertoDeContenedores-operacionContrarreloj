@@ -57,8 +57,11 @@ int simulacion()
     system("cls");
     printf("Bievenido a Operacion Contrarreloj!\n\n");
     puts ("Puede seleccionar el comando OPS para ver las operaciones disponibles");
+    puts ("\nComienza la jornada!\n");
+    system("pause");
     procesarEventos(&sim, &buquesEspera, &camionesEspera, &usuario); //eventos programados para T=0
     avanzarRelojAuto(&sim, &buquesEspera, &camionesEspera, &usuario, &config);
+    ver(&sim.tiempo_actual, &usuario, &sim.muelles, &sim.zonas, &buquesEspera, &camionesEspera);
     while(!jornadaFinalizada(&sim, &buquesEspera, &camionesEspera, &config) && salir == FALLO)
     {
         printf("<Operador>");
